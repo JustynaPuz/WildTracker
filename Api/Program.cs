@@ -1,48 +1,65 @@
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Text.Json.Serialization;
+using FluentValidation.AspNetCore;
+using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
+using WildTracker.API.Extensions;
+using WildTracker.API.Middleware;
+using WildTracker.Infrastructure;
+using WildTracker.Infrastructure.Persistence;
 
-var builder = WebApplication.CreateSlimBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.ConfigureHttpJsonOptions(options =>
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+builder.Services.AddOpenApi();
+
+builder.Services.AddCors(options =>
 {
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+    options.AddPolicy("Frontend", policy =>
+    {
+        var allowedOrigins = builder.Configuration
+            .GetSection("AllowedOrigins")
+            .Get<string[]>() ?? ["http://localhost:5173"];
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// Ensure the database schema exists before the app starts accepting requests.
+// Retries handle the race condition where the API starts before PostgreSQL is ready.
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    for (var attempt = 0; attempt < 5; attempt++)
+    {
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            break;
+        }
+        catch (Exception ex)
+        {
+            if (attempt == 4) throw;
+            app.Logger.LogWarning(ex, "Database not ready, retrying in 3 s (attempt {Attempt}/5)…", attempt + 1);
+            await Task.Delay(TimeSpan.FromSeconds(3));
+        }
+    }
 }
 
-Todo[] sampleTodos =
-[
-    new(1, "Walk the dog"),
-    new(2, "Do the dishes", DateOnly.FromDateTime(DateTime.Now)),
-    new(3, "Do the laundry", DateOnly.FromDateTime(DateTime.Now.AddDays(1))),
-    new(4, "Clean the bathroom"),
-    new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2)))
-];
-
-var todosApi = app.MapGroup("/todos");
-todosApi.MapGet("/", () => sampleTodos)
-        .WithName("GetTodos");
-
-todosApi.MapGet("/{id}", Results<Ok<Todo>, NotFound> (int id) =>
-    sampleTodos.FirstOrDefault(a => a.Id == id) is { } todo
-        ? TypedResults.Ok(todo)
-        : TypedResults.NotFound())
-    .WithName("GetTodoById");
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.MapOpenApi();
+app.MapScalarApiReference();
+app.UseCors("Frontend");
+app.MapControllers();
 
 app.Run();
 
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
-
-[JsonSerializable(typeof(Todo[]))]
-internal partial class AppJsonSerializerContext : JsonSerializerContext
-{
-
-}
+public partial class Program { }

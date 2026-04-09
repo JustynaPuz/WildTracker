@@ -1,11 +1,107 @@
-@Api_HostAddress = http://localhost:5228
+@baseUrl = http://localhost:5000
 
-GET {{Api_HostAddress}}/todos/
-Accept: application/json
+### Animals
+
+GET {{baseUrl}}/api/animals HTTP/1.1
+
+###
+
+GET {{baseUrl}}/api/animals/{{animalId}} HTTP/1.1
 
 ###
 
-GET {{Api_HostAddress}}/todos/1
-Accept: application/json
+POST {{baseUrl}}/api/animals HTTP/1.1
+Content-Type: application/json
+
+{
+  "identifier": "WOLF-001",
+  "name": "Alpha",
+  "species": "Wolf",
+  "healthStatus": "Healthy",
+  "description": "Pack leader observed in the northern sector"
+}
 
 ###
+
+PUT {{baseUrl}}/api/animals/{{animalId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Alpha",
+  "species": "Wolf",
+  "healthStatus": "Injured",
+  "description": "Injured left paw"
+}
+
+###
+
+DELETE {{baseUrl}}/api/animals/{{animalId}} HTTP/1.1
+
+### Sighting Reports
+
+GET {{baseUrl}}/api/reports HTTP/1.1
+
+###
+
+GET {{baseUrl}}/api/reports?animalId={{animalId}}&status=Pending&page=1&pageSize=20 HTTP/1.1
+
+###
+
+GET {{baseUrl}}/api/reports/{{reportId}} HTTP/1.1
+
+###
+
+POST {{baseUrl}}/api/reports HTTP/1.1
+Content-Type: application/json
+
+{
+  "animalId": "{{animalId}}",
+  "observedAtUtc": "2025-06-15T10:30:00Z",
+  "reportType": "Sighting",
+  "source": "Manual",
+  "latitude": 52.2297,
+  "longitude": 21.0122,
+  "region": "Mazowieckie",
+  "forestDistrict": "Kampinos",
+  "description": "Single wolf observed near the eastern trail"
+}
+
+###
+
+PUT {{baseUrl}}/api/reports/{{reportId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "observedAtUtc": "2025-06-15T10:30:00Z",
+  "reportType": "Sighting",
+  "source": "CameraTrap",
+  "latitude": 52.2297,
+  "longitude": 21.0122,
+  "region": "Mazowieckie"
+}
+
+###
+
+POST {{baseUrl}}/api/reports/{{reportId}}/approve HTTP/1.1
+
+###
+
+POST {{baseUrl}}/api/reports/{{reportId}}/reject HTTP/1.1
+
+###
+
+DELETE {{baseUrl}}/api/reports/{{reportId}} HTTP/1.1
+
+### Observation Notes
+
+GET {{baseUrl}}/api/notes/report/{{reportId}} HTTP/1.1
+
+###
+
+POST {{baseUrl}}/api/notes HTTP/1.1
+Content-Type: application/json
+
+{
+  "sightingReportId": "{{reportId}}",
+  "content": "Confirmed by camera trap footage from sector B"
+}
