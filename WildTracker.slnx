@@ -7,7 +7,6 @@
     <Project Path="Contracts/WildTracker.Contracts.csproj" Id="8521a1d8-e1ad-49a4-b74a-13e4ce0268de" />
     <Project Path="Domain/WildTracker.Domain.csproj" Id="aadd7da4-a5c7-4217-83f8-dbdbca1e4ae2" />
     <Project Path="Infrastructure/WildTracker.Infrastructure.csproj" Id="5fdfc23b-d0ae-4a78-9ea3-7575cd26fd01" />
-    <Project Path="Web/Web.csproj" Id="0121f056-d3cd-4e8c-a0b3-12b2151010c4" />
   </Folder>
   <Folder Name="/tests/" />
 </Solution>
