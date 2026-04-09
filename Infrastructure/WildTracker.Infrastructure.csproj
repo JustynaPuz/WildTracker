@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\WildTracker.Application.csproj" />
+    <ProjectReference Include="..\Contracts\WildTracker.Contracts.csproj" />
+    <ProjectReference Include="..\Domain\WildTracker.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
