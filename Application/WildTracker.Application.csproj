@@ -6,4 +6,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Contracts\WildTracker.Contracts.csproj" />
+    <ProjectReference Include="..\Domain\WildTracker.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
