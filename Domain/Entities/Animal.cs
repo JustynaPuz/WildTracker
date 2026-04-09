@@ -1,4 +1,4 @@
-﻿using WildTracker.Domain.Common;
+using WildTracker.Domain.Common;
 using WildTracker.Domain.Enums;
 
 namespace WildTracker.Domain.Entities;
@@ -20,19 +20,19 @@ public class Animal : AuditableEntity
 
     public Animal(string identifier, string name, Species species, AnimalHealthStatus healthStatus, string? description = null)
     {
-        Identifier = ValidateRequired(identifier, nameof(identifier), 50);
-        Name = ValidateRequired(name, nameof(name), 100);
+        Identifier = DomainGuard.RequiredString(identifier, nameof(identifier), 50);
+        Name = DomainGuard.RequiredString(name, nameof(name), 100);
         Species = species;
         HealthStatus = healthStatus;
-        Description = Normalize(description, 1000);
+        Description = DomainGuard.OptionalString(description, nameof(description), 1000);
     }
 
     public void UpdateDetails(string name, Species species, AnimalHealthStatus healthStatus, string? description)
     {
-        Name = ValidateRequired(name, nameof(name), 100);
+        Name = DomainGuard.RequiredString(name, nameof(name), 100);
         Species = species;
         HealthStatus = healthStatus;
-        Description = Normalize(description, 1000);
+        Description = DomainGuard.OptionalString(description, nameof(description), 1000);
         MarkAsUpdated();
     }
 
@@ -40,39 +40,5 @@ public class Animal : AuditableEntity
     {
         LastSeenAtUtc = seenAtUtc;
         MarkAsUpdated();
-    }
-
-    private static string ValidateRequired(string value, string paramName, int maxLength)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException("Value cannot be empty.", paramName);
-        }
-
-        var normalized = value.Trim();
-
-        if (normalized.Length > maxLength)
-        {
-            throw new ArgumentException($"Value cannot exceed {maxLength} characters.", paramName);
-        }
-
-        return normalized;
-    }
-
-    private static string? Normalize(string? value, int maxLength)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var normalized = value.Trim();
-
-        if (normalized.Length > maxLength)
-        {
-            throw new ArgumentException($"Value cannot exceed {maxLength} characters.");
-        }
-
-        return normalized;
     }
 }

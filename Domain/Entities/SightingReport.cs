@@ -1,4 +1,4 @@
-﻿using WildTracker.Domain.Common;
+using WildTracker.Domain.Common;
 using WildTracker.Domain.Enums;
 using WildTracker.Domain.ValueObjects;
 
@@ -15,8 +15,8 @@ public class SightingReport : AuditableEntity
     public LocationDetails Location { get; private set; }
     public string? Description { get; private set; }
 
-    private readonly List<ObservationNote> _notes = new();
     public IReadOnlyCollection<ObservationNote> Notes => _notes.AsReadOnly();
+    private readonly List<ObservationNote> _notes = [];
 
     private SightingReport()
     {
@@ -33,14 +33,10 @@ public class SightingReport : AuditableEntity
         string? description = null)
     {
         if (animalId == Guid.Empty)
-        {
             throw new ArgumentException("AnimalId cannot be empty.", nameof(animalId));
-        }
 
         if (reportedByUserId == Guid.Empty)
-        {
             throw new ArgumentException("ReportedByUserId cannot be empty.", nameof(reportedByUserId));
-        }
 
         AnimalId = animalId;
         ReportedByUserId = reportedByUserId;
@@ -48,7 +44,7 @@ public class SightingReport : AuditableEntity
         ReportType = reportType;
         Source = source;
         Location = location ?? throw new ArgumentNullException(nameof(location));
-        Description = Normalize(description, 2000);
+        Description = DomainGuard.OptionalString(description, nameof(description), 2000);
         Status = ReportStatus.Pending;
     }
 
@@ -56,13 +52,13 @@ public class SightingReport : AuditableEntity
     {
         ObservedAtUtc = observedAtUtc;
         Location = location ?? throw new ArgumentNullException(nameof(location));
-        Description = Normalize(description, 2000);
+        Description = DomainGuard.OptionalString(description, nameof(description), 2000);
         ReportType = reportType;
         Source = source;
         MarkAsUpdated();
     }
 
-    public void Verify()
+    public void Approve()
     {
         Status = ReportStatus.Verified;
         MarkAsUpdated();
@@ -78,30 +74,5 @@ public class SightingReport : AuditableEntity
     {
         Status = ReportStatus.Resolved;
         MarkAsUpdated();
-    }
-
-    public ObservationNote AddNote(Guid authorUserId, string content)
-    {
-        var note = new ObservationNote(Id, authorUserId, content);
-        _notes.Add(note);
-        MarkAsUpdated();
-        return note;
-    }
-
-    private static string? Normalize(string? value, int maxLength)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var normalized = value.Trim();
-
-        if (normalized.Length > maxLength)
-        {
-            throw new ArgumentException($"Value cannot exceed {maxLength} characters.");
-        }
-
-        return normalized;
     }
 }

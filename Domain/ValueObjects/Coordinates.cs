@@ -2,8 +2,10 @@
 
 public sealed class Coordinates : IEquatable<Coordinates>
 {
-    public double Latitude { get; }
-    public double Longitude { get; }
+    private Coordinates() { } // required by EF Core
+
+    public double Latitude { get; private set; }
+    public double Longitude { get; private set; }
 
     public Coordinates(double latitude, double longitude)
     {

@@ -1,4 +1,4 @@
-﻿using WildTracker.Domain.Common;
+using WildTracker.Domain.Common;
 using WildTracker.Domain.Enums;
 
 namespace WildTracker.Domain.Entities;
@@ -56,16 +56,12 @@ public class AppUser : AuditableEntity
     private static string ValidateRequired(string value, string paramName, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
             throw new ArgumentException("Value cannot be empty.", paramName);
-        }
 
         var normalized = value.Trim();
 
         if (normalized.Length > maxLength)
-        {
             throw new ArgumentException($"Value cannot exceed {maxLength} characters.", paramName);
-        }
 
         return normalized;
     }
@@ -73,21 +69,15 @@ public class AppUser : AuditableEntity
     private static string ValidateEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
-        {
             throw new ArgumentException("Email cannot be empty.", nameof(email));
-        }
 
-        var normalized = email.Trim();
+        var normalized = email.Trim().ToLowerInvariant();
 
         if (normalized.Length > 200)
-        {
             throw new ArgumentException("Email cannot exceed 200 characters.", nameof(email));
-        }
 
         if (!normalized.Contains('@'))
-        {
             throw new ArgumentException("Email format is invalid.", nameof(email));
-        }
 
         return normalized;
     }

@@ -2,10 +2,12 @@
 
 public sealed class LocationDetails : IEquatable<LocationDetails>
 {
-    public Coordinates Coordinates { get; }
-    public string? Region { get; }
-    public string? ForestDistrict { get; }
-    public string? Description { get; }
+    private LocationDetails() { } // required by EF Core
+
+    public Coordinates Coordinates { get; private set; } = null!;
+    public string? Region { get; private set; }
+    public string? ForestDistrict { get; private set; }
+    public string? Description { get; private set; }
 
     public LocationDetails(Coordinates coordinates, string? region = null, string? forestDistrict = null, string? description = null)
     {
