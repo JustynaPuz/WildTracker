@@ -2,7 +2,6 @@ using WildTracker.Application.Exceptions;
 using WildTracker.Application.Interfaces;
 using WildTracker.Application.Mappers;
 using WildTracker.Contracts.DTOs;
-using WildTracker.Contracts.Requests;
 using WildTracker.Domain.Entities;
 using WildTracker.Domain.Repositories;
 
@@ -25,15 +24,13 @@ public class ObservationNoteService : IObservationNoteService
         return notes.Select(ObservationNoteMapper.ToDto);
     }
 
-    public async Task<ObservationNoteDto> CreateAsync(CreateObservationNoteRequest request, Guid authorUserId)
+    public async Task<ObservationNoteDto> CreateAsync(Guid reportId, string content, Guid authorUserId)
     {
-        var reportExists = await _reportRepo.GetByIdAsync(request.SightingReportId) is not null;
+        var reportExists = await _reportRepo.GetByIdAsync(reportId) is not null;
         if (!reportExists)
-        {
-            throw new NotFoundException($"Sighting report with id '{request.SightingReportId}' was not found.");
-        }
+            throw new NotFoundException($"Sighting report with id '{reportId}' was not found.");
 
-        var entity = new ObservationNote(request.SightingReportId, authorUserId, request.Content);
+        var entity = new ObservationNote(reportId, authorUserId, content);
         await _repo.AddAsync(entity);
         return ObservationNoteMapper.ToDto(entity);
     }
