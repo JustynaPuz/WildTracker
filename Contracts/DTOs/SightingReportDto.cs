@@ -1,8 +1,9 @@
+using WildTracker.Contracts.Common;
 using WildTracker.Domain.Enums;
 
 namespace WildTracker.Contracts.DTOs;
 
-public class SightingReportDto
+public record SightingReportDto
 {
     public Guid Id { get; init; }
     public Guid AnimalId { get; init; }
@@ -14,4 +15,5 @@ public class SightingReportDto
     public LocationDetailsDto Location { get; init; } = default!;
     public string? Description { get; init; }
     public DateTime CreatedAtUtc { get; init; }
+    public IReadOnlyList<Link> Links { get; init; } = [];
 }

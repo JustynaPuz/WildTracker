@@ -1,8 +1,9 @@
+using WildTracker.Contracts.Common;
 using WildTracker.Domain.Enums;
 
 namespace WildTracker.Contracts.DTOs;
 
-public class AnimalDto
+public record AnimalDto
 {
     public Guid Id { get; init; }
     public string Identifier { get; init; } = default!;
@@ -12,4 +13,5 @@ public class AnimalDto
     public string? Description { get; init; }
     public DateTime? LastSeenAtUtc { get; init; }
     public DateTime CreatedAtUtc { get; init; }
+    public IReadOnlyList<Link> Links { get; init; } = [];
 }
