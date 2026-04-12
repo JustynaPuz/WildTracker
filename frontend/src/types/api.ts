@@ -12,6 +12,30 @@ export type ReportType = 'Sighting' | 'Injury' | 'Death' | 'DangerousBehavior' |
 
 export type SightingSource = 'Manual' | 'CameraTrap' | 'Drone' | 'Sensor' | 'Imported'
 
+// ── Hypermedia ─────────────────────────────────────────────────────────────────
+
+export interface Link {
+  rel: string
+  href: string
+  method: string
+}
+
+// ── Envelope types ─────────────────────────────────────────────────────────────
+
+export interface CollectionResponse<T> {
+  items: T[]
+  links: Link[]
+}
+
+export interface PagedResult<T> {
+  items: T[]
+  totalCount: number
+  page: number
+  pageSize: number
+  totalPages: number
+  links: Link[]
+}
+
 // ── DTOs (responses) ───────────────────────────────────────────────────────────
 
 export interface AnimalDto {
@@ -23,6 +47,7 @@ export interface AnimalDto {
   description?: string
   lastSeenAtUtc?: string
   createdAtUtc: string
+  links: Link[]
 }
 
 export interface LocationDetailsDto {
@@ -43,6 +68,7 @@ export interface SightingReportDto {
   location: LocationDetailsDto
   description?: string
   createdAtUtc: string
+  links: Link[]
 }
 
 export interface ObservationNoteDto {
@@ -51,14 +77,7 @@ export interface ObservationNoteDto {
   authorUserId: string
   content: string
   createdAtUtc: string
-}
-
-export interface PagedResult<T> {
-  items: T[]
-  totalCount: number
-  page: number
-  pageSize: number
-  totalPages: number
+  links: Link[]
 }
 
 // ── Requests (inputs) ─────────────────────────────────────────────────────────
@@ -91,7 +110,6 @@ export interface CreateSightingReportRequest {
 }
 
 export interface CreateObservationNoteRequest {
-  sightingReportId: string
   content: string
 }
 

@@ -1,9 +1,9 @@
 import client from './client'
-import type { AnimalDto, CreateAnimalRequest, UpdateAnimalRequest } from '../types/api'
+import type { AnimalDto, CollectionResponse, CreateAnimalRequest, UpdateAnimalRequest } from '../types/api'
 
 export const animalsApi = {
   getAll: () =>
-    client.get<AnimalDto[]>('/animals').then((r) => r.data),
+    client.get<CollectionResponse<AnimalDto>>('/animals').then((r) => r.data.items),
 
   getById: (id: string) =>
     client.get<AnimalDto>(`/animals/${id}`).then((r) => r.data),

@@ -7,7 +7,6 @@ import type {
   AnimalDto,
   ObservationNoteDto,
   CreateSightingReportRequest,
-  CreateObservationNoteRequest,
   ReportStatus,
   ReportType,
   SightingSource,
@@ -119,9 +118,8 @@ export default function ReportsPage() {
 
   const handleAddNote = async (reportId: string) => {
     if (!noteContent.trim()) return
-    const req: CreateObservationNoteRequest = { sightingReportId: reportId, content: noteContent }
     try {
-      await notesApi.create(req)
+      await notesApi.create(reportId, { content: noteContent })
       setNoteContent('')
       const data = await notesApi.getByReport(reportId)
       setNotes((prev) => ({ ...prev, [reportId]: data }))

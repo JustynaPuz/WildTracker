@@ -1,10 +1,11 @@
 import client from './client'
-import type { ObservationNoteDto, CreateObservationNoteRequest } from '../types/api'
+import type { CollectionResponse, ObservationNoteDto, CreateObservationNoteRequest } from '../types/api'
 
 export const notesApi = {
   getByReport: (reportId: string) =>
-    client.get<ObservationNoteDto[]>(`/notes/report/${reportId}`).then((r) => r.data),
+    client.get<CollectionResponse<ObservationNoteDto>>(`/reports/${reportId}/notes`)
+      .then((r) => r.data.items),
 
-  create: (request: CreateObservationNoteRequest) =>
-    client.post<ObservationNoteDto>('/notes', request).then((r) => r.data),
+  create: (reportId: string, request: CreateObservationNoteRequest) =>
+    client.post<ObservationNoteDto>(`/reports/${reportId}/notes`, request).then((r) => r.data),
 }
