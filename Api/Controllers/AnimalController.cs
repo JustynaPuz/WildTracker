@@ -13,15 +13,6 @@ public class AnimalController : ApiControllerBase
 
     public AnimalController(IAnimalService service) => _service = service;
 
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AnimalDto>> Get(Guid id)
-    {
-        var dto = await _service.GetByIdAsync(id);
-        return Ok(WithLinks(dto));
-    }
-
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<AnimalDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<CollectionResponse<AnimalDto>>> GetAll()
@@ -36,6 +27,15 @@ public class AnimalController : ApiControllerBase
                 MakeLink("create", nameof(Create), "POST"),
             ],
         });
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<AnimalDto>> Get(Guid id)
+    {
+        var dto = await _service.GetByIdAsync(id);
+        return Ok(WithLinks(dto));
     }
 
     [HttpPost]
@@ -57,6 +57,31 @@ public class AnimalController : ApiControllerBase
         return Ok(WithLinks(dto));
     }
 
+    [HttpGet("{id:guid}/movement")]
+    [ProducesResponseType(typeof(CollectionResponse<MovementPointDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CollectionResponse<MovementPointDto>>> GetMovement(
+        Guid id, [FromQuery] int limit = 50)
+    {
+        var points = await _service.GetMovementAsync(id, limit);
+        return Ok(new CollectionResponse<MovementPointDto>
+        {
+            Items = points.Select(p => p with
+            {
+                Links =
+                [
+                    MakeLink("report", nameof(SightingReportController.Get), "SightingReport", "GET",
+                        new { id = p.ReportId }),
+                ],
+            }).ToList(),
+            Links =
+            [
+                MakeLink("self",   nameof(GetMovement), "GET", new { id, limit }),
+                MakeLink("animal", nameof(Get),         "GET", new { id }),
+            ],
+        });
+    }
+
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -72,11 +97,11 @@ public class AnimalController : ApiControllerBase
     {
         Links =
         [
-            MakeLink("self",    nameof(Get),    "GET",    new { id = dto.Id }),
-            MakeLink("update",  nameof(Update), "PUT",    new { id = dto.Id }),
-            MakeLink("delete",  nameof(Delete), "DELETE", new { id = dto.Id }),
-            // navigate to all sighting reports for this animal
-            MakeLink("reports", nameof(SightingReportController.Search), "SightingReport", "GET",
+            MakeLink("self",     nameof(Get),         "GET",    new { id = dto.Id }),
+            MakeLink("update",   nameof(Update),      "PUT",    new { id = dto.Id }),
+            MakeLink("delete",   nameof(Delete),      "DELETE", new { id = dto.Id }),
+            MakeLink("movement", nameof(GetMovement), "GET",    new { id = dto.Id }),
+            MakeLink("reports",  nameof(SightingReportController.Search), "SightingReport", "GET",
                 new { animalId = dto.Id }),
         ],
     };

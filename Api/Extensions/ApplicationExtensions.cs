@@ -12,8 +12,9 @@ public static class ApplicationExtensions
         services.AddScoped<IAnimalService, AnimalService>();
         services.AddScoped<ISightingReportService, SightingReportService>();
         services.AddScoped<IObservationNoteService, ObservationNoteService>();
+        services.AddScoped<IStatsService, StatsService>();
+        services.AddScoped<IUserService, UserService>();
 
-        // Scan validators from the Application assembly, not the API assembly
         services.AddValidatorsFromAssemblyContaining<CreateAnimalValidator>();
 
         return services;

@@ -1,6 +1,6 @@
-using System.Net;
-using System.Text.Json;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using WildTracker.Application.Exceptions;
 
 namespace WildTracker.API.Middleware;
@@ -12,7 +12,7 @@ public class ExceptionHandlingMiddleware
 
     public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
-        _next = next;
+        _next   = next;
         _logger = logger;
     }
 
@@ -24,11 +24,11 @@ public class ExceptionHandlingMiddleware
         }
         catch (NotFoundException ex)
         {
-            await WriteProblemAsync(context, HttpStatusCode.NotFound, ex.Message);
+            await WriteProblemAsync(context, StatusCodes.Status404NotFound, ex.Message);
         }
         catch (ConflictException ex)
         {
-            await WriteProblemAsync(context, HttpStatusCode.Conflict, ex.Message);
+            await WriteProblemAsync(context, StatusCodes.Status409Conflict, ex.Message);
         }
         catch (ValidationException ex)
         {
@@ -36,47 +36,48 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception");
-            await WriteProblemAsync(context, HttpStatusCode.InternalServerError, "An unexpected error occurred.");
+            _logger.LogError(ex, "Unhandled exception processing {Method} {Path}",
+                context.Request.Method, context.Request.Path);
+
+            await WriteProblemAsync(context, StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred. Please try again later.");
         }
     }
 
-    private static async Task WriteProblemAsync(HttpContext context, HttpStatusCode status, string detail)
-    {
-        context.Response.ContentType = "application/problem+json";
-        context.Response.StatusCode = (int)status;
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
-        var problem = new
+    private static Task WriteProblemAsync(HttpContext context, int status, string detail)
+    {
+        var problem = new ProblemDetails
         {
-            type = $"https://httpstatuses.com/{(int)status}",
-            title = status.ToString(),
-            status = (int)status,
-            detail
+            Type   = $"https://tools.ietf.org/html/rfc9110#section-15.5.{status - 399}",
+            Title  = ReasonPhrases.GetReasonPhrase(status),
+            Status = status,
+            Detail = detail,
         };
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+        context.Response.StatusCode  = status;
+        context.Response.ContentType = "application/problem+json";
+        return context.Response.WriteAsJsonAsync(problem);
     }
 
-    private static async Task WriteValidationProblemAsync(HttpContext context, ValidationException ex)
+    private static Task WriteValidationProblemAsync(HttpContext context, ValidationException ex)
     {
-        context.Response.ContentType = "application/problem+json";
-        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
         var errors = ex.Errors
             .GroupBy(e => e.PropertyName)
             .ToDictionary(
                 g => g.Key,
-                g => g.Select(e => e.ErrorMessage).ToArray()
-            );
+                g => g.Select(e => e.ErrorMessage).ToArray());
 
-        var problem = new
+        var problem = new ValidationProblemDetails(errors)
         {
-            type = "https://httpstatuses.com/400",
-            title = "Validation failed",
-            status = 400,
-            errors
+            Type   = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+            Title  = "One or more validation errors occurred.",
+            Status = StatusCodes.Status400BadRequest,
         };
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+        context.Response.StatusCode  = StatusCodes.Status400BadRequest;
+        context.Response.ContentType = "application/problem+json";
+        return context.Response.WriteAsJsonAsync(problem);
     }
 }

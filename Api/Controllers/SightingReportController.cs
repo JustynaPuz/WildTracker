@@ -17,15 +17,6 @@ public class SightingReportController : ApiControllerBase
 
     public SightingReportController(ISightingReportService service) => _service = service;
 
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<SightingReportDto>> Get(Guid id)
-    {
-        var dto = await _service.GetByIdAsync(id);
-        return Ok(WithLinks(dto));
-    }
-
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<SightingReportDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<SightingReportDto>>> Search([FromQuery] SightingReportSearchRequest request)
@@ -36,6 +27,15 @@ public class SightingReportController : ApiControllerBase
             Items = result.Items.Select(WithLinks),
             Links = PaginationLinks(result.Page, result.TotalPages, request),
         });
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SightingReportDto>> Get(Guid id)
+    {
+        var dto = await _service.GetByIdAsync(id);
+        return Ok(WithLinks(dto));
     }
 
     [HttpPost]
@@ -58,21 +58,33 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpPost("{id:guid}/approve")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Approve(Guid id)
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<SightingReportDto>> Approve(Guid id)
     {
-        await _service.ApproveAsync(id);
-        return NoContent();
+        var dto = await _service.ApproveAsync(id);
+        return Ok(WithLinks(dto));
     }
 
     [HttpPost("{id:guid}/reject")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Reject(Guid id)
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<SightingReportDto>> Reject(Guid id)
     {
-        await _service.RejectAsync(id);
-        return NoContent();
+        var dto = await _service.RejectAsync(id);
+        return Ok(WithLinks(dto));
+    }
+
+    [HttpPost("{id:guid}/resolve")]
+    [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<SightingReportDto>> Resolve(Guid id)
+    {
+        var dto = await _service.ResolveAsync(id);
+        return Ok(WithLinks(dto));
     }
 
     [HttpDelete("{id:guid}")]
@@ -98,11 +110,15 @@ public class SightingReportController : ApiControllerBase
                 new { reportId = dto.Id }),
         };
 
-        // State-dependent actions — only exposed when they make sense
         if (dto.Status == ReportStatus.Pending)
         {
             links.Add(MakeLink("approve", nameof(Approve), "POST", new { id = dto.Id }));
             links.Add(MakeLink("reject",  nameof(Reject),  "POST", new { id = dto.Id }));
+        }
+
+        if (dto.Status == ReportStatus.Verified)
+        {
+            links.Add(MakeLink("resolve", nameof(Resolve), "POST", new { id = dto.Id }));
         }
 
         return dto with { Links = links };
@@ -112,9 +128,9 @@ public class SightingReportController : ApiControllerBase
     {
         var links = new List<Link>
         {
-            PageLink("self",  page,       req),
-            PageLink("first", 1,          req),
-            PageLink("last",  Math.Max(totalPages, 1), req),
+            PageLink("self",  page,                      req),
+            PageLink("first", 1,                         req),
+            PageLink("last",  Math.Max(totalPages, 1),   req),
         };
         if (page > 1)          links.Add(PageLink("prev", page - 1, req));
         if (page < totalPages) links.Add(PageLink("next", page + 1, req));
@@ -124,11 +140,11 @@ public class SightingReportController : ApiControllerBase
     private Link PageLink(string rel, int page, SightingReportSearchRequest req) =>
         MakeLink(rel, nameof(Search), "GET", new
         {
-            animalId  = req.AnimalId,
-            status    = req.Status,
-            from      = req.From,
-            to        = req.To,
+            animalId = req.AnimalId,
+            status   = req.Status,
+            from     = req.From,
+            to       = req.To,
             page,
-            pageSize  = req.PageSize,
+            pageSize = req.PageSize,
         });
 }

@@ -27,14 +27,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHealthChecks();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-// Ensure the database schema exists before the app starts accepting requests.
-// Retries handle the race condition where the API starts before PostgreSQL is ready.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -55,6 +54,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.MapHealthChecks("/health");
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.UseCors("Frontend");
