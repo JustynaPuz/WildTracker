@@ -4,6 +4,7 @@ using WildTracker.Application.Mappers;
 using WildTracker.Contracts.Common;
 using WildTracker.Contracts.DTOs;
 using WildTracker.Contracts.Requests;
+using WildTracker.Domain.Queries;
 using WildTracker.Domain.Repositories;
 using WildTracker.Domain.ValueObjects;
 
@@ -13,10 +14,7 @@ public class SightingReportService : ISightingReportService
 {
     private readonly ISightingReportRepository _repo;
 
-    public SightingReportService(ISightingReportRepository repo)
-    {
-        _repo = repo;
-    }
+    public SightingReportService(ISightingReportRepository repo) => _repo = repo;
 
     public async Task<SightingReportDto> GetByIdAsync(Guid id)
     {
@@ -28,14 +26,26 @@ public class SightingReportService : ISightingReportService
 
     public async Task<PagedResult<SightingReportDto>> SearchAsync(SightingReportSearchRequest request)
     {
-        var (items, total) = await _repo.SearchAsync(request.ToFilter());
+        // Filter mapping lives here — not in the Contracts layer — to keep Contracts free of Domain.Queries.
+        var filter = new SightingReportFilter
+        {
+            AnimalId          = request.AnimalId,
+            ReportedByUserId  = request.ReportedByUserId,
+            Status            = request.Status,
+            From              = request.From,
+            To                = request.To,
+            Page              = request.Page,
+            PageSize          = request.PageSize,
+        };
+
+        var (items, total) = await _repo.SearchAsync(filter);
 
         return new PagedResult<SightingReportDto>
         {
-            Items = items.Select(SightingReportMapper.ToDto),
+            Items     = items.Select(SightingReportMapper.ToDto).ToList(), // materialize — no lazy chains
             TotalCount = total,
-            Page = request.Page,
-            PageSize = request.PageSize
+            Page      = request.Page,
+            PageSize  = request.PageSize,
         };
     }
 
@@ -56,34 +66,49 @@ public class SightingReportService : ISightingReportService
             new LocationDetails(
                 new Coordinates(request.Latitude, request.Longitude),
                 request.Region,
-                request.ForestDistrict
-                // location has no separate description field in the request
-            ),
-            request.Description,   // this is the report-level description only
+                request.ForestDistrict),
+            request.Description,
             request.ReportType,
-            request.Source
-        );
+            request.Source);
 
         await _repo.UpdateAsync(entity);
         return SightingReportMapper.ToDto(entity);
     }
 
-    public async Task ApproveAsync(Guid id)
+    public async Task<SightingReportDto> ApproveAsync(Guid id)
     {
         var entity = await _repo.GetByIdAsync(id)
             ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
 
-        entity.Approve();
+        try { entity.Approve(); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+
         await _repo.UpdateAsync(entity);
+        return SightingReportMapper.ToDto(entity);
     }
 
-    public async Task RejectAsync(Guid id)
+    public async Task<SightingReportDto> RejectAsync(Guid id)
     {
         var entity = await _repo.GetByIdAsync(id)
             ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
 
-        entity.Reject();
+        try { entity.Reject(); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+
         await _repo.UpdateAsync(entity);
+        return SightingReportMapper.ToDto(entity);
+    }
+
+    public async Task<SightingReportDto> ResolveAsync(Guid id)
+    {
+        var entity = await _repo.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
+
+        try { entity.Resolve(); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+
+        await _repo.UpdateAsync(entity);
+        return SightingReportMapper.ToDto(entity);
     }
 
     public async Task DeleteAsync(Guid id)

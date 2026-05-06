@@ -10,4 +10,5 @@ public interface IAnimalService
     Task<AnimalDto> CreateAsync(CreateAnimalRequest request);
     Task<AnimalDto> UpdateAsync(Guid id, UpdateAnimalRequest request);
     Task DeleteAsync(Guid id);
+    Task<IEnumerable<MovementPointDto>> GetMovementAsync(Guid id, int limit = 50);
 }

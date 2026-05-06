@@ -7,10 +7,11 @@ public static class ObservationNoteMapper
 {
     public static ObservationNoteDto ToDto(ObservationNote entity) => new()
     {
-        Id = entity.Id,
+        Id               = entity.Id,
         SightingReportId = entity.SightingReportId,
-        AuthorUserId = entity.AuthorUserId,
-        Content = entity.Content,
-        CreatedAtUtc = entity.CreatedAtUtc
+        AuthorUserId     = entity.AuthorUserId,
+        Content          = entity.Content,
+        CreatedAtUtc     = entity.CreatedAtUtc,
+        UpdatedAtUtc     = entity.UpdatedAtUtc,
     };
 }

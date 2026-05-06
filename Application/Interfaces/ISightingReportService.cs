@@ -10,7 +10,8 @@ public interface ISightingReportService
     Task<PagedResult<SightingReportDto>> SearchAsync(SightingReportSearchRequest request);
     Task<SightingReportDto> CreateAsync(CreateSightingReportRequest request, Guid reportedByUserId);
     Task<SightingReportDto> UpdateAsync(Guid id, UpdateSightingReportRequest request);
-    Task ApproveAsync(Guid id);
-    Task RejectAsync(Guid id);
+    Task<SightingReportDto> ApproveAsync(Guid id);
+    Task<SightingReportDto> RejectAsync(Guid id);
+    Task<SightingReportDto> ResolveAsync(Guid id);
     Task DeleteAsync(Guid id);
 }
