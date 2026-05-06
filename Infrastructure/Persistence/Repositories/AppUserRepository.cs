@@ -16,7 +16,7 @@ public class AppUserRepository : IAppUserRepository
     public async Task<AppUser?> GetByEmailAsync(string email)
         => await _context.Users.FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant());
 
-    public async Task<IEnumerable<AppUser>> GetAllAsync()
+    public async Task<IReadOnlyList<AppUser>> GetAllAsync()
         => await _context.Users
             .AsNoTracking()
             .OrderBy(u => u.LastName)

@@ -13,10 +13,10 @@ public class UserService : IUserService
 
     public UserService(IAppUserRepository repo) => _repo = repo;
 
-    public async Task<IEnumerable<AppUserDto>> GetAllAsync()
+    public async Task<IReadOnlyList<AppUserDto>> GetAllAsync()
     {
         var users = await _repo.GetAllAsync();
-        return users.Select(UserMapper.ToDto);
+        return users.Select(UserMapper.ToDto).ToList();
     }
 
     public async Task<AppUserDto> GetByIdAsync(Guid id)
@@ -33,6 +33,26 @@ public class UserService : IUserService
             ?? throw new NotFoundException($"User with id '{id}' was not found.");
 
         user.ChangeRole(role);
+        await _repo.UpdateAsync(user);
+        return UserMapper.ToDto(user);
+    }
+
+    public async Task<AppUserDto> ActivateAsync(Guid id)
+    {
+        var user = await _repo.GetByIdAsync(id)
+            ?? throw new NotFoundException($"User with id '{id}' was not found.");
+
+        user.Activate();
+        await _repo.UpdateAsync(user);
+        return UserMapper.ToDto(user);
+    }
+
+    public async Task<AppUserDto> DeactivateAsync(Guid id)
+    {
+        var user = await _repo.GetByIdAsync(id)
+            ?? throw new NotFoundException($"User with id '{id}' was not found.");
+
+        user.Deactivate();
         await _repo.UpdateAsync(user);
         return UserMapper.ToDto(user);
     }

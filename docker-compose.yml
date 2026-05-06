@@ -31,6 +31,10 @@ services:
         Database=${POSTGRES_DB:-wildtracker};
         Username=${POSTGRES_USER:-wildtracker};
         Password=${POSTGRES_PASSWORD:-wildtracker}
+      Jwt__Secret: "CHANGE_ME_use_a_strong_secret_at_least_32_chars!!"
+      Jwt__Issuer: WildTracker
+      Jwt__Audience: WildTracker
+      Jwt__ExpiryMinutes: "60"
     depends_on:
       postgres:
         condition: service_healthy

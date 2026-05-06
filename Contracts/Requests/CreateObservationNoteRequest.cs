@@ -1,6 +1,0 @@
-namespace WildTracker.Contracts.Requests;
-
-public record CreateObservationNoteRequest
-{
-    public string Content { get; init; } = default!;
-}

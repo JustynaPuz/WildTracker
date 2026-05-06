@@ -1,78 +1,89 @@
 using WildTracker.Application.Exceptions;
 using WildTracker.Application.Interfaces;
 using WildTracker.Application.Mappers;
+using WildTracker.Contracts.Common;
 using WildTracker.Contracts.DTOs;
 using WildTracker.Contracts.Requests;
+using WildTracker.Domain.Queries;
 using WildTracker.Domain.Repositories;
 
 namespace WildTracker.Application.Services;
 
 public class AnimalService : IAnimalService
 {
-    private readonly IAnimalRepository _repo;
-    private readonly ISightingReportRepository _reportRepo;
+    private readonly IAnimalRepository _animalRepository;
+    private readonly ISightingReportRepository _reportRepository;
 
-    public AnimalService(IAnimalRepository repo, ISightingReportRepository reportRepo)
+    public AnimalService(IAnimalRepository animalRepository, ISightingReportRepository reportRepository)
     {
-        _repo = repo;
-        _reportRepo = reportRepo;
+        _animalRepository = animalRepository;
+        _reportRepository = reportRepository;
     }
 
     public async Task<AnimalDto> GetByIdAsync(Guid id)
     {
-        var entity = await _repo.GetByIdAsync(id)
+        var entity = await _animalRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Animal with id '{id}' was not found.");
 
         return AnimalMapper.ToDto(entity);
     }
 
-    public async Task<IEnumerable<AnimalDto>> GetAllAsync()
+    public async Task<IReadOnlyList<AnimalDto>> GetAllAsync()
     {
-        var animals = await _repo.GetAllAsync();
-        return animals.Select(AnimalMapper.ToDto);
+        var animals = await _animalRepository.GetAllAsync();
+        return animals.Select(AnimalMapper.ToDto).ToList();
+    }
+
+    public async Task<PagedResult<AnimalDto>> SearchAsync(AnimalSearchRequest request)
+    {
+        var (items, total) = await _animalRepository.SearchAsync(request.ToFilter());
+
+        return new PagedResult<AnimalDto>
+        {
+            Items      = items.Select(AnimalMapper.ToDto).ToList(),
+            TotalCount = total,
+            Page       = request.Page,
+            PageSize   = request.PageSize,
+        };
+    }
+
+    public async Task<IReadOnlyList<MovementPointDto>> GetMovementAsync(Guid id, int limit)
+    {
+        _ = await _animalRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Animal with id '{id}' was not found.");
+
+        var (reports, _) = await _reportRepository.SearchAsync(new SightingReportFilter
+        {
+            AnimalId = id,
+            Page     = 1,
+            PageSize = Math.Clamp(limit, 1, 500),
+        });
+
+        return reports.Select(SightingReportMapper.ToMovementPointDto).ToList();
     }
 
     public async Task<AnimalDto> CreateAsync(CreateAnimalRequest request)
     {
         var entity = AnimalMapper.ToEntity(request);
-        await _repo.AddAsync(entity);
+        await _animalRepository.AddAsync(entity);
         return AnimalMapper.ToDto(entity);
     }
 
     public async Task<AnimalDto> UpdateAsync(Guid id, UpdateAnimalRequest request)
     {
-        var entity = await _repo.GetByIdAsync(id)
+        var entity = await _animalRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Animal with id '{id}' was not found.");
 
         entity.UpdateDetails(request.Name, request.Species, request.HealthStatus, request.Description);
-        await _repo.UpdateAsync(entity);
+        await _animalRepository.UpdateAsync(entity);
         return AnimalMapper.ToDto(entity);
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        var entity = await _repo.GetByIdAsync(id)
+        var entity = await _animalRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Animal with id '{id}' was not found.");
 
-        await _repo.DeleteAsync(entity);
-    }
-
-    public async Task<IEnumerable<MovementPointDto>> GetMovementAsync(Guid id, int limit = 50)
-    {
-        _ = await _repo.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Animal with id '{id}' was not found.");
-
-        var reports = await _reportRepo.GetMovementAsync(id, limit);
-        return reports.Select(r => new MovementPointDto
-        {
-            ReportId        = r.Id,
-            ObservedAtUtc   = r.ObservedAtUtc,
-            Latitude        = r.Location.Coordinates.Latitude,
-            Longitude       = r.Location.Coordinates.Longitude,
-            Region          = r.Location.Region,
-            ForestDistrict  = r.Location.ForestDistrict,
-            ReportType      = r.ReportType,
-            Status          = r.Status,
-        });
+        await _animalRepository.DeleteAsync(entity);
     }
 }

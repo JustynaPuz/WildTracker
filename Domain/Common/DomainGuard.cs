@@ -27,4 +27,12 @@ internal static class DomainGuard
 
         return trimmed;
     }
+
+    internal static Guid RequiredGuid(Guid value, string paramName)
+    {
+        if (value == Guid.Empty)
+            throw new ArgumentException("Value cannot be empty.", paramName);
+
+        return value;
+    }
 }

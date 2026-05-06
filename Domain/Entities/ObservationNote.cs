@@ -15,14 +15,8 @@ public class ObservationNote : AuditableEntity
 
     public ObservationNote(Guid sightingReportId, Guid authorUserId, string content)
     {
-        if (sightingReportId == Guid.Empty)
-            throw new ArgumentException("SightingReportId cannot be empty.", nameof(sightingReportId));
-
-        if (authorUserId == Guid.Empty)
-            throw new ArgumentException("AuthorUserId cannot be empty.", nameof(authorUserId));
-
-        SightingReportId = sightingReportId;
-        AuthorUserId     = authorUserId;
+        SightingReportId = DomainGuard.RequiredGuid(sightingReportId, nameof(sightingReportId));
+        AuthorUserId     = DomainGuard.RequiredGuid(authorUserId, nameof(authorUserId));
         Content          = DomainGuard.RequiredString(content, nameof(content), 1000);
     }
 

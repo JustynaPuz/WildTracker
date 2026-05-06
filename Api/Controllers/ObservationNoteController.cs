@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WildTracker.Application.Interfaces;
 using WildTracker.Contracts.Common;
@@ -7,10 +8,9 @@ using WildTracker.Contracts.Requests;
 namespace WildTracker.API.Controllers;
 
 [Route("api/reports/{reportId:guid}/notes")]
+[Authorize]
 public class ObservationNoteController : ApiControllerBase
 {
-    private static readonly Guid PlaceholderUserId = new("00000000-0000-0000-0000-000000000001");
-
     private readonly IObservationNoteService _service;
 
     public ObservationNoteController(IObservationNoteService service) => _service = service;
@@ -50,7 +50,7 @@ public class ObservationNoteController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ObservationNoteDto>> Create(Guid reportId, CreateObservationNoteRequest request)
     {
-        var dto = await _service.CreateAsync(reportId, request.Content, PlaceholderUserId);
+        var dto = await _service.CreateAsync(reportId, request.Content, CurrentUserId);
         return CreatedAtAction(nameof(GetById), new { reportId, noteId = dto.Id }, WithLinks(dto, reportId));
     }
 

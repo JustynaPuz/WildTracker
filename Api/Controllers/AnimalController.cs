@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WildTracker.Application.Interfaces;
 using WildTracker.Contracts.Common;
@@ -7,20 +8,12 @@ using WildTracker.Contracts.Requests;
 namespace WildTracker.API.Controllers;
 
 [Route("api/animals")]
+[Authorize]
 public class AnimalController : ApiControllerBase
 {
     private readonly IAnimalService _service;
 
     public AnimalController(IAnimalService service) => _service = service;
-
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AnimalDto>> Get(Guid id)
-    {
-        var dto = await _service.GetByIdAsync(id);
-        return Ok(WithLinks(dto));
-    }
 
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<AnimalDto>), StatusCodes.Status200OK)]
@@ -33,9 +26,31 @@ public class AnimalController : ApiControllerBase
             Links =
             [
                 MakeLink("self",   nameof(GetAll), "GET"),
+                MakeLink("search", nameof(Search), "GET"),
                 MakeLink("create", nameof(Create), "POST"),
             ],
         });
+    }
+
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(PagedResult<AnimalDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AnimalDto>>> Search([FromQuery] AnimalSearchRequest request)
+    {
+        var result = await _service.SearchAsync(request);
+        return Ok(result with
+        {
+            Items = result.Items.Select(WithLinks).ToList(),
+            Links = PaginationLinks(result.Page, result.TotalPages, request),
+        });
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<AnimalDto>> Get(Guid id)
+    {
+        var dto = await _service.GetByIdAsync(id);
+        return Ok(WithLinks(dto));
     }
 
     [HttpPost]
@@ -103,4 +118,27 @@ public class AnimalController : ApiControllerBase
                 new { animalId = dto.Id }),
         ],
     };
+
+    private IReadOnlyList<Link> PaginationLinks(int page, int totalPages, AnimalSearchRequest req)
+    {
+        var links = new List<Link>
+        {
+            PageLink("self",  page,                    req),
+            PageLink("first", 1,                       req),
+            PageLink("last",  Math.Max(totalPages, 1), req),
+        };
+        if (page > 1)          links.Add(PageLink("prev", page - 1, req));
+        if (page < totalPages) links.Add(PageLink("next", page + 1, req));
+        return links;
+    }
+
+    private Link PageLink(string rel, int page, AnimalSearchRequest req) =>
+        MakeLink(rel, nameof(Search), "GET", new
+        {
+            species      = req.Species,
+            healthStatus = req.HealthStatus,
+            searchTerm   = req.SearchTerm,
+            page,
+            pageSize     = req.PageSize,
+        });
 }

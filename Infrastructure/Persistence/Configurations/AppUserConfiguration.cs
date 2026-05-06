@@ -25,6 +25,10 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.HasIndex(x => x.Email)
             .IsUnique();
 
+        builder.Property(x => x.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.Property(x => x.Role)
             .IsRequired()
             .HasConversion<string>()

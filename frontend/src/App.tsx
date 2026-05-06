@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import AnimalsPage from './pages/AnimalsPage'
 import ReportsPage from './pages/ReportsPage'
@@ -9,18 +12,23 @@ import UsersPage from './pages/UsersPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/animals"   element={<AnimalsPage />} />
-          <Route path="/reports"   element={<ReportsPage />} />
-          <Route path="/map"       element={<MapPage />} />
-          <Route path="/stats"     element={<StatsPage />} />
-          <Route path="/users"     element={<UsersPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/animals"   element={<AnimalsPage />} />
+              <Route path="/reports"   element={<ReportsPage />} />
+              <Route path="/map"       element={<MapPage />} />
+              <Route path="/stats"     element={<StatsPage />} />
+              <Route path="/users"     element={<UsersPage />} />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

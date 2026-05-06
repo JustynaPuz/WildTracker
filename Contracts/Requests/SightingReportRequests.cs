@@ -2,7 +2,7 @@ using WildTracker.Domain.Enums;
 
 namespace WildTracker.Contracts.Requests;
 
-public record CreateSightingReportRequest
+public class CreateSightingReportRequest
 {
     public Guid AnimalId { get; init; }
     public DateTime ObservedAtUtc { get; init; }
@@ -15,7 +15,7 @@ public record CreateSightingReportRequest
     public string? Description { get; init; }
 }
 
-public record UpdateSightingReportRequest
+public class UpdateSightingReportRequest
 {
     public DateTime ObservedAtUtc { get; init; }
     public ReportType ReportType { get; init; }

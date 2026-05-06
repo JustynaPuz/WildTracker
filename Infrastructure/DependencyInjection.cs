@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WildTracker.Application.Interfaces;
 using WildTracker.Domain.Repositories;
+using WildTracker.Infrastructure.Auth;
 using WildTracker.Infrastructure.Persistence;
 using WildTracker.Infrastructure.Persistence.Repositories;
 
@@ -19,6 +21,10 @@ public static class DependencyInjection
         services.AddScoped<IObservationNoteRepository, ObservationNoteRepository>();
         services.AddScoped<IAppUserRepository, AppUserRepository>();
         services.AddScoped<IStatsRepository, StatsRepository>();
+
+        services.Configure<JwtSettings>(config.GetSection(JwtSettings.SectionName));
+        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 
         return services;
     }

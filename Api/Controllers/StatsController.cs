@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WildTracker.Application.Interfaces;
 using WildTracker.Contracts.Common;
@@ -6,6 +7,7 @@ using WildTracker.Contracts.DTOs;
 namespace WildTracker.API.Controllers;
 
 [Route("api/stats")]
+[Authorize]
 public class StatsController : ApiControllerBase
 {
     private readonly IStatsService _service;

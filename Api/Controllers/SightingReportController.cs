@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WildTracker.Application.Interfaces;
 using WildTracker.Contracts.Common;
@@ -8,13 +9,24 @@ using WildTracker.Domain.Enums;
 namespace WildTracker.API.Controllers;
 
 [Route("api/reports")]
+[Authorize]
 public class SightingReportController : ApiControllerBase
 {
-    private static readonly Guid PlaceholderUserId = new("00000000-0000-0000-0000-000000000001");
-
     private readonly ISightingReportService _service;
 
     public SightingReportController(ISightingReportService service) => _service = service;
+
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<SightingReportDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<SightingReportDto>>> Search([FromQuery] SightingReportSearchRequest request)
+    {
+        var result = await _service.SearchAsync(request);
+        return Ok(result with
+        {
+            Items = result.Items.Select(WithLinks).ToList(),
+            Links = PaginationLinks(result.Page, result.TotalPages, request),
+        });
+    }
 
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
@@ -25,24 +37,12 @@ public class SightingReportController : ApiControllerBase
         return Ok(WithLinks(dto));
     }
 
-    [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<SightingReportDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResult<SightingReportDto>>> Search([FromQuery] SightingReportSearchRequest request)
-    {
-        var result = await _service.SearchAsync(request);
-        return Ok(result with
-        {
-            Items = (IReadOnlyList<SightingReportDto>)result.Items.Select(WithLinks),
-            Links = PaginationLinks(result.Page, result.TotalPages, request),
-        });
-    }
-
     [HttpPost]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SightingReportDto>> Create(CreateSightingReportRequest request)
     {
-        var dto = await _service.CreateAsync(request, PlaceholderUserId);
+        var dto = await _service.CreateAsync(request, CurrentUserId);
         return CreatedAtAction(nameof(Get), new { id = dto.Id }, WithLinks(dto));
     }
 
@@ -114,9 +114,7 @@ public class SightingReportController : ApiControllerBase
         }
 
         if (dto.Status == ReportStatus.Verified)
-        {
             links.Add(MakeLink("resolve", nameof(Resolve), "POST", new { id = dto.Id }));
-        }
 
         return dto with { Links = links };
     }
@@ -137,11 +135,13 @@ public class SightingReportController : ApiControllerBase
     private Link PageLink(string rel, int page, SightingReportSearchRequest req) =>
         MakeLink(rel, nameof(Search), "GET", new
         {
-            animalId  = req.AnimalId,
-            status    = req.Status,
-            from      = req.From,
-            to        = req.To,
+            animalId         = req.AnimalId,
+            species          = req.Species,
+            reportedByUserId = req.ReportedByUserId,
+            status           = req.Status,
+            from             = req.From,
+            to               = req.To,
             page,
-            pageSize  = req.PageSize,
+            pageSize         = req.PageSize,
         });
 }

@@ -6,8 +6,7 @@ namespace WildTracker.Domain.Repositories;
 public interface ISightingReportRepository
 {
     Task<SightingReport?> GetByIdAsync(Guid id);
-    Task<(IEnumerable<SightingReport> Items, int TotalCount)> SearchAsync(SightingReportFilter filter);
-    Task<IEnumerable<SightingReport>> GetMovementAsync(Guid animalId, int limit);
+    Task<(IReadOnlyList<SightingReport> Items, int TotalCount)> SearchAsync(SightingReportFilter filter);
     Task AddAsync(SightingReport entity);
     Task UpdateAsync(SightingReport entity);
     Task DeleteAsync(SightingReport entity);

@@ -9,59 +9,55 @@ namespace WildTracker.Application.Services;
 
 public class ObservationNoteService : IObservationNoteService
 {
-    private readonly IObservationNoteRepository _repo;
-    private readonly ISightingReportRepository _reportRepo;
+    private readonly IObservationNoteRepository _noteRepository;
+    private readonly ISightingReportRepository _reportRepository;
 
-    public ObservationNoteService(IObservationNoteRepository repo, ISightingReportRepository reportRepo)
+    public ObservationNoteService(IObservationNoteRepository noteRepository, ISightingReportRepository reportRepository)
     {
-        _repo       = repo;
-        _reportRepo = reportRepo;
+        _noteRepository = noteRepository;
+        _reportRepository = reportRepository;
     }
 
-    public async Task<IEnumerable<ObservationNoteDto>> GetByReportIdAsync(Guid reportId)
+    public async Task<IReadOnlyList<ObservationNoteDto>> GetByReportIdAsync(Guid reportId)
     {
-        var notes = await _repo.GetByReportIdAsync(reportId);
-        return notes.Select(ObservationNoteMapper.ToDto);
+        _ = await _reportRepository.GetByIdAsync(reportId)
+            ?? throw new NotFoundException($"Sighting report with id '{reportId}' was not found.");
+
+        var notes = await _noteRepository.GetByReportIdAsync(reportId);
+        return notes.Select(ObservationNoteMapper.ToDto).ToList();
     }
 
     public async Task<ObservationNoteDto> CreateAsync(Guid reportId, string content, Guid authorUserId)
     {
-        _ = await _reportRepo.GetByIdAsync(reportId)
+        _ = await _reportRepository.GetByIdAsync(reportId)
             ?? throw new NotFoundException($"Sighting report with id '{reportId}' was not found.");
 
         var entity = new ObservationNote(reportId, authorUserId, content);
-        await _repo.AddAsync(entity);
+        await _noteRepository.AddAsync(entity);
         return ObservationNoteMapper.ToDto(entity);
     }
 
     public async Task<ObservationNoteDto> UpdateAsync(Guid reportId, Guid noteId, string content)
     {
-        var note = await GetNoteOrThrow(reportId, noteId);
+        var note = await _noteRepository.GetByIdAsync(noteId)
+            ?? throw new NotFoundException($"Observation note with id '{noteId}' was not found.");
+
+        if (note.SightingReportId != reportId)
+            throw new NotFoundException($"Observation note with id '{noteId}' was not found.");
+
         note.UpdateContent(content);
-        await _repo.UpdateAsync(note);
+        await _noteRepository.UpdateAsync(note);
         return ObservationNoteMapper.ToDto(note);
     }
 
     public async Task DeleteAsync(Guid reportId, Guid noteId)
     {
-        var note = await GetNoteOrThrow(reportId, noteId);
-        await _repo.DeleteAsync(note);
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Fetches a note and validates it belongs to the given report.
-    /// Prevents accessing notes from a different report via URL manipulation.
-    /// </summary>
-    private async Task<ObservationNote> GetNoteOrThrow(Guid reportId, Guid noteId)
-    {
-        var note = await _repo.GetByIdAsync(noteId)
-            ?? throw new NotFoundException($"Note with id '{noteId}' was not found.");
+        var note = await _noteRepository.GetByIdAsync(noteId)
+            ?? throw new NotFoundException($"Observation note with id '{noteId}' was not found.");
 
         if (note.SightingReportId != reportId)
-            throw new NotFoundException($"Note with id '{noteId}' was not found on report '{reportId}'.");
+            throw new NotFoundException($"Observation note with id '{noteId}' was not found.");
 
-        return note;
+        await _noteRepository.DeleteAsync(note);
     }
 }

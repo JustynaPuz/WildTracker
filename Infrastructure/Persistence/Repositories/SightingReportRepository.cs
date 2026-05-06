@@ -17,7 +17,7 @@ public class SightingReportRepository : ISightingReportRepository
     public async Task<SightingReport?> GetByIdAsync(Guid id)
         => await _context.SightingReports.FindAsync(id);
 
-    public async Task<(IEnumerable<SightingReport> Items, int TotalCount)> SearchAsync(SightingReportFilter filter)
+    public async Task<(IReadOnlyList<SightingReport> Items, int TotalCount)> SearchAsync(SightingReportFilter filter)
     {
         var query = _context.SightingReports.AsNoTracking().AsQueryable();
 
@@ -26,6 +26,12 @@ public class SightingReportRepository : ISightingReportRepository
 
         if (filter.ReportedByUserId.HasValue)
             query = query.Where(x => x.ReportedByUserId == filter.ReportedByUserId);
+
+        if (filter.Species.HasValue)
+        {
+            var species = filter.Species.Value;
+            query = query.Where(x => _context.Animals.Any(a => a.Id == x.AnimalId && a.Species == species));
+        }
 
         if (filter.Status.HasValue)
             query = query.Where(x => x.Status == filter.Status);
@@ -39,7 +45,7 @@ public class SightingReportRepository : ISightingReportRepository
         var total = await query.CountAsync();
 
         var pageSize = Math.Clamp(filter.PageSize, 1, 100);
-        var page = Math.Max(filter.Page, 1);
+        var page     = Math.Max(filter.Page, 1);
 
         var items = await query
             .OrderByDescending(x => x.ObservedAtUtc)
@@ -49,14 +55,6 @@ public class SightingReportRepository : ISightingReportRepository
 
         return (items, total);
     }
-
-    public async Task<IEnumerable<SightingReport>> GetMovementAsync(Guid animalId, int limit)
-        => await _context.SightingReports
-            .AsNoTracking()
-            .Where(x => x.AnimalId == animalId)
-            .OrderByDescending(x => x.ObservedAtUtc)
-            .Take(Math.Clamp(limit, 1, 200))
-            .ToListAsync();
 
     public async Task AddAsync(SightingReport entity)
     {

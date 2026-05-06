@@ -13,7 +13,7 @@ public class ObservationNoteRepository : IObservationNoteRepository
     public async Task<ObservationNote?> GetByIdAsync(Guid id)
         => await _context.ObservationNotes.FindAsync(id);
 
-    public async Task<IEnumerable<ObservationNote>> GetByReportIdAsync(Guid reportId)
+    public async Task<IReadOnlyList<ObservationNote>> GetByReportIdAsync(Guid reportId)
         => await _context.ObservationNotes
             .AsNoTracking()
             .Where(x => x.SightingReportId == reportId)

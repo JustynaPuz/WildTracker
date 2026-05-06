@@ -106,6 +106,12 @@ export interface MovementPointDto {
   links: Link[]
 }
 
+export interface AuthResponseDto {
+  token: string
+  expiresAt: string
+  user: AppUserDto
+}
+
 // ── Requests (inputs) ─────────────────────────────────────────────────────────
 
 export interface CreateAnimalRequest {
@@ -141,6 +147,18 @@ export interface CreateObservationNoteRequest {
 
 export interface UpdateObservationNoteRequest {
   content: string
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface RegisterRequest {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
 }
 
 export interface SightingReportSearchRequest {

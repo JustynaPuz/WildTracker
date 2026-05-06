@@ -5,7 +5,9 @@ namespace WildTracker.Application.Interfaces;
 
 public interface IUserService
 {
-    Task<IEnumerable<AppUserDto>> GetAllAsync();
+    Task<IReadOnlyList<AppUserDto>> GetAllAsync();
     Task<AppUserDto> GetByIdAsync(Guid id);
     Task<AppUserDto> ChangeRoleAsync(Guid id, UserRole role);
+    Task<AppUserDto> ActivateAsync(Guid id);
+    Task<AppUserDto> DeactivateAsync(Guid id);
 }

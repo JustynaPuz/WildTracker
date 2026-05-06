@@ -9,23 +9,32 @@ public static class SightingReportMapper
 {
     public static SightingReportDto ToDto(SightingReport entity) => new()
     {
-        Id = entity.Id,
-        AnimalId = entity.AnimalId,
+        Id               = entity.Id,
+        AnimalId         = entity.AnimalId,
         ReportedByUserId = entity.ReportedByUserId,
-        ObservedAtUtc = entity.ObservedAtUtc,
-        ReportType = entity.ReportType,
-        Status = entity.Status,
-        Source = entity.Source,
-        Description = entity.Description,
-        CreatedAtUtc = entity.CreatedAtUtc,
+        ObservedAtUtc    = entity.ObservedAtUtc,
+        ReportType       = entity.ReportType,
+        Status           = entity.Status,
+        Source           = entity.Source,
+        Description      = entity.Description,
+        CreatedAtUtc     = entity.CreatedAtUtc,
         Location = new LocationDetailsDto
         {
-            Latitude = entity.Location.Coordinates.Latitude,
-            Longitude = entity.Location.Coordinates.Longitude,
-            Region = entity.Location.Region,
+            Latitude       = entity.Location.Coordinates.Latitude,
+            Longitude      = entity.Location.Coordinates.Longitude,
+            Region         = entity.Location.Region,
             ForestDistrict = entity.Location.ForestDistrict,
-            Description = entity.Location.Description
-        }
+            Description    = entity.Location.Description,
+        },
+    };
+
+    public static MovementPointDto ToMovementPointDto(SightingReport entity) => new()
+    {
+        ReportId      = entity.Id,
+        Latitude      = entity.Location.Coordinates.Latitude,
+        Longitude     = entity.Location.Coordinates.Longitude,
+        Region        = entity.Location.Region,
+        ObservedAtUtc = entity.ObservedAtUtc,
     };
 
     public static SightingReport ToEntity(CreateSightingReportRequest request, Guid reportedByUserId) => new(

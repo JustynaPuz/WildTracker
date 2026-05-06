@@ -32,29 +32,23 @@ public class SightingReport : AuditableEntity
         LocationDetails location,
         string? description = null)
     {
-        if (animalId == Guid.Empty)
-            throw new ArgumentException("AnimalId cannot be empty.", nameof(animalId));
-
-        if (reportedByUserId == Guid.Empty)
-            throw new ArgumentException("ReportedByUserId cannot be empty.", nameof(reportedByUserId));
-
-        AnimalId = animalId;
-        ReportedByUserId = reportedByUserId;
-        ObservedAtUtc = observedAtUtc;
-        ReportType = reportType;
-        Source = source;
-        Location = location ?? throw new ArgumentNullException(nameof(location));
-        Description = DomainGuard.OptionalString(description, nameof(description), 2000);
-        Status = ReportStatus.Pending;
+        AnimalId         = DomainGuard.RequiredGuid(animalId, nameof(animalId));
+        ReportedByUserId = DomainGuard.RequiredGuid(reportedByUserId, nameof(reportedByUserId));
+        ObservedAtUtc    = observedAtUtc;
+        ReportType       = reportType;
+        Source           = source;
+        Location         = location ?? throw new ArgumentNullException(nameof(location));
+        Description      = DomainGuard.OptionalString(description, nameof(description), 2000);
+        Status           = ReportStatus.Pending;
     }
 
     public void UpdateObservation(DateTime observedAtUtc, LocationDetails location, string? description, ReportType reportType, SightingSource source)
     {
         ObservedAtUtc = observedAtUtc;
-        Location = location ?? throw new ArgumentNullException(nameof(location));
-        Description = DomainGuard.OptionalString(description, nameof(description), 2000);
-        ReportType = reportType;
-        Source = source;
+        Location      = location ?? throw new ArgumentNullException(nameof(location));
+        Description   = DomainGuard.OptionalString(description, nameof(description), 2000);
+        ReportType    = reportType;
+        Source        = source;
         MarkAsUpdated();
     }
 

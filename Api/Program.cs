@@ -1,9 +1,13 @@
+using System.Text;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using WildTracker.API.Extensions;
 using WildTracker.API.Middleware;
 using WildTracker.Infrastructure;
+using WildTracker.Infrastructure.Auth;
 using WildTracker.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +31,25 @@ builder.Services.AddCors(options =>
     });
 });
 
+var jwtSection = builder.Configuration.GetSection(JwtSettings.SectionName);
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = jwtSection["Issuer"],
+            ValidAudience            = jwtSection["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSection["Secret"]!)),
+        };
+    });
+builder.Services.AddAuthorization();
+
 builder.Services.AddHealthChecks();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddApplication();
@@ -42,6 +65,7 @@ using (var scope = app.Services.CreateScope())
         try
         {
             await db.Database.EnsureCreatedAsync();
+            await DataSeeder.SeedAsync(db);
             break;
         }
         catch (Exception ex)
@@ -58,6 +82,8 @@ app.MapHealthChecks("/health");
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.UseCors("Frontend");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
