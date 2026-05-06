@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  NODE_VERSION: "22"
+
+jobs:
+  # ── 1. Build & Unit Tests ────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore WildTracker.slnx
+
+      - name: Build solution
+        run: dotnet build WildTracker.slnx --no-restore --configuration Release
+
+      - name: Run unit tests
+        id: unit_tests
+        run: |
+          START=$(date +%s%3N)
+          dotnet test Tests/WildTracker.Unit.Tests/WildTracker.Unit.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=unit-results.trx" \
+            --results-directory TestResults/unit
+          END=$(date +%s%3N)
+          echo "duration_ms=$((END - START))" >> "$GITHUB_OUTPUT"
+
+      - name: Report unit test duration
+        run: echo "Unit tests completed in ${{ steps.unit_tests.outputs.duration_ms }} ms"
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: TestResults/unit/*.trx
+
+  # ── 2. Integration Tests (requires Docker for Testcontainers) ────────────────
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore WildTracker.slnx
+
+      - name: Build solution
+        run: dotnet build WildTracker.slnx --no-restore --configuration Release
+
+      - name: Run integration tests
+        id: integration_tests
+        run: |
+          START=$(date +%s%3N)
+          dotnet test Tests/WildTracker.Integration.Tests/WildTracker.Integration.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=integration-results.trx" \
+            --results-directory TestResults/integration
+          END=$(date +%s%3N)
+          echo "duration_ms=$((END - START))" >> "$GITHUB_OUTPUT"
+
+      - name: Report integration test duration
+        run: echo "Integration tests completed in ${{ steps.integration_tests.outputs.duration_ms }} ms"
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: TestResults/integration/*.trx
+
+  # ── 3. Frontend Build ────────────────────────────────────────────────────────
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build frontend
+        id: frontend_build
+        working-directory: frontend
+        run: |
+          START=$(date +%s%3N)
+          npm run build
+          END=$(date +%s%3N)
+          echo "duration_ms=$((END - START))" >> "$GITHUB_OUTPUT"
+
+      - name: Report frontend build duration
+        run: echo "Frontend build completed in ${{ steps.frontend_build.outputs.duration_ms }} ms"
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ── 4. Docker Build Smoke Test ───────────────────────────────────────────────
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [ unit-tests, frontend-build ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build API Docker image
+        run: |
+          docker build \
+            --file Api/Dockerfile \
+            --tag wildtracker-api:ci \
+            .
+
+      - name: Build Frontend Docker image
+        run: |
+          docker build \
+            --file frontend/Dockerfile \
+            --tag wildtracker-frontend:ci \
+            ./frontend

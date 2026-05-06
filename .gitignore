@@ -1,3 +1,15 @@
 .vs/
 bin/
 obj/
+
+# Local environment — never commit real secrets
+.env
+
+# Test output
+TestResults/
+*.trx
+*.coverage
+
+# Node
+frontend/node_modules/
+frontend/dist/
