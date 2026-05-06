@@ -1,5 +1,5 @@
 import client from './client'
-import type { AnimalDto, CollectionResponse, CreateAnimalRequest, UpdateAnimalRequest } from '../types/api'
+import type { AnimalDto, CollectionResponse, CreateAnimalRequest, MovementPointDto, UpdateAnimalRequest } from '../types/api'
 
 export const animalsApi = {
   getAll: () =>
@@ -16,4 +16,8 @@ export const animalsApi = {
 
   delete: (id: string) =>
     client.delete(`/animals/${id}`),
+
+  getMovement: (id: string, limit = 50) =>
+    client.get<CollectionResponse<MovementPointDto>>(`/animals/${id}/movement`, { params: { limit } })
+      .then((r) => r.data.items),
 }

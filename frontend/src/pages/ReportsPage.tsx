@@ -17,11 +17,16 @@ const SOURCES: SightingSource[] = ['Manual', 'CameraTrap', 'Drone', 'Sensor', 'I
 const STATUSES: ReportStatus[] = ['Pending', 'Verified', 'Rejected', 'Resolved']
 
 const statusColor: Record<ReportStatus, string> = {
-  Pending: '#b7791f',
+  Pending:  '#b7791f',
   Verified: '#276749',
   Rejected: '#c53030',
   Resolved: '#2b6cb0',
 }
+
+const btn = (bg: string): React.CSSProperties => ({
+  background: bg, color: '#fff', border: 'none',
+  padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem',
+})
 
 const emptyForm = (): CreateSightingReportRequest => ({
   animalId: '',
@@ -36,33 +41,34 @@ const emptyForm = (): CreateSightingReportRequest => ({
 })
 
 export default function ReportsPage() {
-  const [animals, setAnimals] = useState<AnimalDto[]>([])
-  const [reports, setReports] = useState<SightingReportDto[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const PAGE_SIZE = 10
+  const [animals, setAnimals]   = useState<AnimalDto[]>([])
+  const [reports, setReports]   = useState<SightingReportDto[]>([])
+  const [total, setTotal]       = useState(0)
+  const [page, setPage]         = useState(1)
+  const PAGE_SIZE               = 10
 
-  const [filterAnimal, setFilterAnimal] = useState('')
-  const [filterStatus, setFilterStatus] = useState<ReportStatus | ''>('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [filterAnimal, setFilterAnimal]   = useState('')
+  const [filterStatus, setFilterStatus]   = useState<ReportStatus | ''>('')
+  const [loading, setLoading]             = useState(true)
+  const [error, setError]                 = useState<string | null>(null)
 
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState<CreateSightingReportRequest>(emptyForm())
+  const [form, setForm]         = useState<CreateSightingReportRequest>(emptyForm())
 
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [notes, setNotes] = useState<Record<string, ObservationNoteDto[]>>({})
+  const [notes, setNotes]           = useState<Record<string, ObservationNoteDto[]>>({})
   const [noteContent, setNoteContent] = useState('')
 
-  useEffect(() => {
-    animalsApi.getAll().then(setAnimals).catch(() => {})
-  }, [])
+  // per-note edit state: noteId → draft content (undefined = not editing)
+  const [editingNote, setEditingNote] = useState<Record<string, string>>({})
+
+  useEffect(() => { animalsApi.getAll().then(setAnimals).catch(() => {}) }, [])
 
   const loadReports = useCallback(() => {
     setLoading(true)
     reportsApi.search({
       animalId: filterAnimal || undefined,
-      status: filterStatus || undefined,
+      status:   filterStatus || undefined,
       page,
       pageSize: PAGE_SIZE,
     })
@@ -73,22 +79,22 @@ export default function ReportsPage() {
 
   useEffect(() => { loadReports() }, [loadReports])
 
+  // ── report actions ────────────────────────────────────────────────────────
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       await reportsApi.create({
         ...form,
         observedAtUtc: new Date(form.observedAtUtc).toISOString(),
-        region: form.region || undefined,
+        region:         form.region         || undefined,
         forestDistrict: form.forestDistrict || undefined,
-        description: form.description || undefined,
+        description:    form.description    || undefined,
       })
       setShowForm(false)
       setForm(emptyForm())
       loadReports()
-    } catch {
-      setError('Failed to create report.')
-    }
+    } catch { setError('Failed to create report.') }
   }
 
   const handleApprove = async (id: string) => {
@@ -101,19 +107,28 @@ export default function ReportsPage() {
     catch { setError('Failed to reject.') }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleResolve = async (id: string) => {
+    try { await reportsApi.resolve(id); loadReports() }
+    catch { setError('Failed to resolve.') }
+  }
+
+  const handleDeleteReport = async (id: string) => {
     if (!confirm('Delete this report?')) return
     try { await reportsApi.delete(id); loadReports() }
     catch { setError('Failed to delete.') }
   }
 
+  // ── note actions ──────────────────────────────────────────────────────────
+
+  const reloadNotes = async (reportId: string) => {
+    const data = await notesApi.getByReport(reportId).catch(() => [])
+    setNotes((prev) => ({ ...prev, [reportId]: data }))
+  }
+
   const toggleNotes = async (id: string) => {
     if (expandedId === id) { setExpandedId(null); return }
     setExpandedId(id)
-    if (!notes[id]) {
-      const data = await notesApi.getByReport(id).catch(() => [])
-      setNotes((prev) => ({ ...prev, [id]: data }))
-    }
+    if (!notes[id]) await reloadNotes(id)
   }
 
   const handleAddNote = async (reportId: string) => {
@@ -121,12 +136,35 @@ export default function ReportsPage() {
     try {
       await notesApi.create(reportId, { content: noteContent })
       setNoteContent('')
-      const data = await notesApi.getByReport(reportId)
-      setNotes((prev) => ({ ...prev, [reportId]: data }))
-    } catch {
-      setError('Failed to add note.')
-    }
+      await reloadNotes(reportId)
+    } catch { setError('Failed to add note.') }
   }
+
+  const handleEditNote = (noteId: string, current: string) =>
+    setEditingNote((prev) => ({ ...prev, [noteId]: current }))
+
+  const handleCancelEdit = (noteId: string) =>
+    setEditingNote((prev) => { const next = { ...prev }; delete next[noteId]; return next })
+
+  const handleSaveNote = async (reportId: string, noteId: string) => {
+    const content = editingNote[noteId]?.trim()
+    if (!content) return
+    try {
+      await notesApi.update(reportId, noteId, { content })
+      handleCancelEdit(noteId)
+      await reloadNotes(reportId)
+    } catch { setError('Failed to update note.') }
+  }
+
+  const handleDeleteNote = async (reportId: string, noteId: string) => {
+    if (!confirm('Delete this note?')) return
+    try {
+      await notesApi.delete(reportId, noteId)
+      await reloadNotes(reportId)
+    } catch { setError('Failed to delete note.') }
+  }
+
+  // ── helpers ───────────────────────────────────────────────────────────────
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const animalName = (id: string) => animals.find((a) => a.id === id)?.name ?? id.slice(0, 8)
@@ -254,29 +292,25 @@ export default function ReportsPage() {
                     <td style={{ padding: '8px 12px' }}>
                       <span style={{ color: statusColor[r.status], fontWeight: 600 }}>{r.status}</span>
                     </td>
-                    <td style={{ padding: '8px 12px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                      {r.status === 'Pending' && (
-                        <>
-                          <button onClick={() => handleApprove(r.id)}
-                            style={{ background: '#276749', color: '#fff', border: 'none', padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
-                            Approve
-                          </button>
-                          <button onClick={() => handleReject(r.id)}
-                            style={{ background: '#c53030', color: '#fff', border: 'none', padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      <button onClick={() => toggleNotes(r.id)}
-                        style={{ background: '#2b6cb0', color: '#fff', border: 'none', padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
-                        {expandedId === r.id ? 'Hide Notes' : 'Notes'}
-                      </button>
-                      <button onClick={() => handleDelete(r.id)}
-                        style={{ background: '#718096', color: '#fff', border: 'none', padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
-                        Delete
-                      </button>
+                    <td style={{ padding: '8px 12px' }}>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {r.status === 'Pending' && (
+                          <>
+                            <button onClick={() => handleApprove(r.id)} style={btn('#276749')}>Approve</button>
+                            <button onClick={() => handleReject(r.id)}  style={btn('#c53030')}>Reject</button>
+                          </>
+                        )}
+                        {r.status === 'Verified' && (
+                          <button onClick={() => handleResolve(r.id)} style={btn('#6b46c1')}>Resolve</button>
+                        )}
+                        <button onClick={() => toggleNotes(r.id)} style={btn('#2b6cb0')}>
+                          {expandedId === r.id ? 'Hide Notes' : 'Notes'}
+                        </button>
+                        <button onClick={() => handleDeleteReport(r.id)} style={btn('#718096')}>Delete</button>
+                      </div>
                     </td>
                   </tr>
+
                   {expandedId === r.id && (
                     <tr key={`${r.id}-notes`}>
                       <td colSpan={7} style={{ padding: '0 12px 12px 12px', background: '#f7fafc', borderBottom: '1px solid #eee' }}>
@@ -285,11 +319,43 @@ export default function ReportsPage() {
                             ? <p style={{ color: '#666', margin: '0 0 8px 0' }}>No notes yet.</p>
                             : (notes[r.id] ?? []).map((n) => (
                                 <div key={n.id} style={{ marginBottom: '8px', padding: '8px', background: '#fff', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                                  <p style={{ margin: 0 }}>{n.content}</p>
-                                  <small style={{ color: '#888' }}>{new Date(n.createdAtUtc).toLocaleString()}</small>
+                                  {editingNote[n.id] !== undefined ? (
+                                    /* ── edit mode ── */
+                                    <div>
+                                      <textarea
+                                        value={editingNote[n.id]}
+                                        onChange={(e) => setEditingNote((prev) => ({ ...prev, [n.id]: e.target.value }))}
+                                        rows={3}
+                                        style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                                      />
+                                      <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                                        <button onClick={() => handleSaveNote(r.id, n.id)} style={btn('#276749')}>Save</button>
+                                        <button onClick={() => handleCancelEdit(n.id)}
+                                          style={{ border: '1px solid #ccc', background: '#fff', padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    /* ── read mode ── */
+                                    <div>
+                                      <p style={{ margin: '0 0 4px 0' }}>{n.content}</p>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <small style={{ color: '#888' }}>
+                                          {new Date(n.createdAtUtc).toLocaleString()}
+                                          {n.updatedAtUtc && <span> · edited {new Date(n.updatedAtUtc).toLocaleString()}</span>}
+                                        </small>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button onClick={() => handleEditNote(n.id, n.content)} style={btn('#b7791f')}>Edit</button>
+                                          <button onClick={() => handleDeleteNote(r.id, n.id)}    style={btn('#c53030')}>Delete</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ))
                           }
+                          {/* add note */}
                           <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                             <input
                               placeholder="Add a note…"

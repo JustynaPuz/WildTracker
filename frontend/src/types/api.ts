@@ -8,6 +8,8 @@ export type AnimalHealthStatus = 'Unknown' | 'Healthy' | 'Injured' | 'Sick' | 'D
 
 export type ReportStatus = 'Pending' | 'Verified' | 'Rejected' | 'Resolved'
 
+export type UserRole = 'Viewer' | 'Ranger' | 'Researcher' | 'Admin'
+
 export type ReportType = 'Sighting' | 'Injury' | 'Death' | 'DangerousBehavior' | 'Other'
 
 export type SightingSource = 'Manual' | 'CameraTrap' | 'Drone' | 'Sensor' | 'Imported'
@@ -77,6 +79,30 @@ export interface ObservationNoteDto {
   authorUserId: string
   content: string
   createdAtUtc: string
+  updatedAtUtc?: string
+  links: Link[]
+}
+
+export interface AppUserDto {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: UserRole
+  isActive: boolean
+  createdAtUtc: string
+  links: Link[]
+}
+
+export interface MovementPointDto {
+  reportId: string
+  observedAtUtc: string
+  latitude: number
+  longitude: number
+  region?: string
+  forestDistrict?: string
+  reportType: ReportType
+  status: ReportStatus
   links: Link[]
 }
 
@@ -113,9 +139,43 @@ export interface CreateObservationNoteRequest {
   content: string
 }
 
+export interface UpdateObservationNoteRequest {
+  content: string
+}
+
 export interface SightingReportSearchRequest {
   animalId?: string
+  reportedByUserId?: string
   status?: ReportStatus
   page?: number
   pageSize?: number
+}
+
+export interface UpdateUserRoleRequest {
+  role: UserRole
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────────
+
+export interface StatsSummaryDto {
+  totalAnimals: number
+  totalReports: number
+  pendingReports: number
+  verifiedReports: number
+  rejectedReports: number
+  resolvedReports: number
+  totalNotes: number
+  totalUsers: number
+}
+
+export interface SightingsBySpeciesDto {
+  species: string
+  count: number
+}
+
+export interface SightingsByMonthDto {
+  year: number
+  month: number
+  count: number
+  label: string
 }

@@ -22,6 +22,9 @@ export const reportsApi = {
   reject: (id: string) =>
     client.post(`/reports/${id}/reject`),
 
+  resolve: (id: string) =>
+    client.post<SightingReportDto>(`/reports/${id}/resolve`).then((r) => r.data),
+
   delete: (id: string) =>
     client.delete(`/reports/${id}`),
 }
