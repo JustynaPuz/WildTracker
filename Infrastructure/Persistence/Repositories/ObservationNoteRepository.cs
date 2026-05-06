@@ -8,10 +8,10 @@ public class ObservationNoteRepository : IObservationNoteRepository
 {
     private readonly AppDbContext _context;
 
-    public ObservationNoteRepository(AppDbContext context)
-    {
-        _context = context;
-    }
+    public ObservationNoteRepository(AppDbContext context) => _context = context;
+
+    public async Task<ObservationNote?> GetByIdAsync(Guid id)
+        => await _context.ObservationNotes.FindAsync(id);
 
     public async Task<IEnumerable<ObservationNote>> GetByReportIdAsync(Guid reportId)
         => await _context.ObservationNotes
@@ -23,6 +23,18 @@ public class ObservationNoteRepository : IObservationNoteRepository
     public async Task AddAsync(ObservationNote entity)
     {
         await _context.ObservationNotes.AddAsync(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(ObservationNote entity)
+    {
+        _context.ObservationNotes.Update(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(ObservationNote entity)
+    {
+        _context.ObservationNotes.Remove(entity);
         await _context.SaveChangesAsync();
     }
 }

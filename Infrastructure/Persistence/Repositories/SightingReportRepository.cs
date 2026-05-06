@@ -24,6 +24,9 @@ public class SightingReportRepository : ISightingReportRepository
         if (filter.AnimalId.HasValue)
             query = query.Where(x => x.AnimalId == filter.AnimalId);
 
+        if (filter.ReportedByUserId.HasValue)
+            query = query.Where(x => x.ReportedByUserId == filter.ReportedByUserId);
+
         if (filter.Status.HasValue)
             query = query.Where(x => x.Status == filter.Status);
 
@@ -46,6 +49,14 @@ public class SightingReportRepository : ISightingReportRepository
 
         return (items, total);
     }
+
+    public async Task<IEnumerable<SightingReport>> GetMovementAsync(Guid animalId, int limit)
+        => await _context.SightingReports
+            .AsNoTracking()
+            .Where(x => x.AnimalId == animalId)
+            .OrderByDescending(x => x.ObservedAtUtc)
+            .Take(Math.Clamp(limit, 1, 200))
+            .ToListAsync();
 
     public async Task AddAsync(SightingReport entity)
     {

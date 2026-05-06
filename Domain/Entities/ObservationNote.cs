@@ -1,4 +1,4 @@
-﻿using WildTracker.Domain.Common;
+using WildTracker.Domain.Common;
 
 namespace WildTracker.Domain.Entities;
 
@@ -16,40 +16,19 @@ public class ObservationNote : AuditableEntity
     public ObservationNote(Guid sightingReportId, Guid authorUserId, string content)
     {
         if (sightingReportId == Guid.Empty)
-        {
             throw new ArgumentException("SightingReportId cannot be empty.", nameof(sightingReportId));
-        }
 
         if (authorUserId == Guid.Empty)
-        {
             throw new ArgumentException("AuthorUserId cannot be empty.", nameof(authorUserId));
-        }
 
         SightingReportId = sightingReportId;
-        AuthorUserId = authorUserId;
-        Content = ValidateContent(content);
+        AuthorUserId     = authorUserId;
+        Content          = DomainGuard.RequiredString(content, nameof(content), 1000);
     }
 
     public void UpdateContent(string content)
     {
-        Content = ValidateContent(content);
+        Content = DomainGuard.RequiredString(content, nameof(content), 1000);
         MarkAsUpdated();
-    }
-
-    private static string ValidateContent(string content)
-    {
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            throw new ArgumentException("Content cannot be empty.", nameof(content));
-        }
-
-        var normalized = content.Trim();
-
-        if (normalized.Length > 1000)
-        {
-            throw new ArgumentException("Content cannot exceed 1000 characters.", nameof(content));
-        }
-
-        return normalized;
     }
 }

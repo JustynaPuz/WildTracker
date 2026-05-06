@@ -60,18 +60,30 @@ public class SightingReport : AuditableEntity
 
     public void Approve()
     {
+        if (Status != ReportStatus.Pending)
+            throw new InvalidOperationException(
+                $"Cannot approve a report with status '{Status}'. Only Pending reports can be approved.");
+
         Status = ReportStatus.Verified;
         MarkAsUpdated();
     }
 
     public void Reject()
     {
+        if (Status != ReportStatus.Pending)
+            throw new InvalidOperationException(
+                $"Cannot reject a report with status '{Status}'. Only Pending reports can be rejected.");
+
         Status = ReportStatus.Rejected;
         MarkAsUpdated();
     }
 
     public void Resolve()
     {
+        if (Status != ReportStatus.Verified)
+            throw new InvalidOperationException(
+                $"Cannot resolve a report with status '{Status}'. Only Verified reports can be resolved.");
+
         Status = ReportStatus.Resolved;
         MarkAsUpdated();
     }

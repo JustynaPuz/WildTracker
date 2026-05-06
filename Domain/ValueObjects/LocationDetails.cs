@@ -1,4 +1,6 @@
-﻿namespace WildTracker.Domain.ValueObjects;
+﻿using WildTracker.Domain.Common;
+
+namespace WildTracker.Domain.ValueObjects;
 
 public sealed class LocationDetails : IEquatable<LocationDetails>
 {
@@ -11,10 +13,10 @@ public sealed class LocationDetails : IEquatable<LocationDetails>
 
     public LocationDetails(Coordinates coordinates, string? region = null, string? forestDistrict = null, string? description = null)
     {
-        Coordinates = coordinates;
-        Region = Normalize(region, 100);
-        ForestDistrict = Normalize(forestDistrict, 100);
-        Description = Normalize(description, 300);
+        Coordinates    = coordinates ?? throw new ArgumentNullException(nameof(coordinates));
+        Region         = DomainGuard.OptionalString(region,         nameof(region),         100);
+        ForestDistrict = DomainGuard.OptionalString(forestDistrict, nameof(forestDistrict), 100);
+        Description    = DomainGuard.OptionalString(description,    nameof(description),    300);
     }
 
     public bool Equals(LocationDetails? other)
@@ -40,20 +42,4 @@ public sealed class LocationDetails : IEquatable<LocationDetails>
         return HashCode.Combine(Coordinates, Region, ForestDistrict, Description);
     }
 
-    private static string? Normalize(string? value, int maxLength)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var normalized = value.Trim();
-
-        if (normalized.Length > maxLength)
-        {
-            throw new ArgumentException($"Value cannot exceed {maxLength} characters.");
-        }
-
-        return normalized;
-    }
 }
