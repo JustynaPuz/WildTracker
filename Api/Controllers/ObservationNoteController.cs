@@ -9,7 +9,6 @@ namespace WildTracker.API.Controllers;
 [Route("api/reports/{reportId:guid}/notes")]
 public class ObservationNoteController : ApiControllerBase
 {
-    // TODO: replace with User.FindFirstValue(ClaimTypes.NameIdentifier) once JWT is implemented
     private static readonly Guid PlaceholderUserId = new("00000000-0000-0000-0000-000000000001");
 
     private readonly IObservationNoteService _service;
@@ -74,8 +73,6 @@ public class ObservationNoteController : ApiControllerBase
         await _service.DeleteAsync(reportId, noteId);
         return NoContent();
     }
-
-    // ── HATEOAS ──────────────────────────────────────────────────────────────
 
     private ObservationNoteDto WithLinks(ObservationNoteDto dto, Guid reportId) => dto with
     {

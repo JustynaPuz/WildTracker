@@ -44,7 +44,6 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static Task WriteProblemAsync(HttpContext context, int status, string detail)
     {

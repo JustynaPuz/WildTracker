@@ -55,8 +55,8 @@ public class StatsController : ApiControllerBase
             Items = items,
             Links =
             [
-                MakeLink("self",    nameof(GetByMonth), "GET"),
-                MakeLink("summary", nameof(GetSummary), "GET"),
+                MakeLink("self",    nameof(GetByMonth),   "GET"),
+                MakeLink("summary", nameof(GetSummary),   "GET"),
             ],
         });
     }

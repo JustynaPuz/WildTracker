@@ -47,8 +47,6 @@ public class UsersController : ApiControllerBase
         return Ok(WithLinks(dto));
     }
 
-    // ── HATEOAS ──────────────────────────────────────────────────────────────
-
     private AppUserDto WithLinks(AppUserDto dto) => dto with
     {
         Links =

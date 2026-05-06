@@ -10,24 +10,11 @@ namespace WildTracker.API.Controllers;
 [Route("api/reports")]
 public class SightingReportController : ApiControllerBase
 {
-    // TODO: replace with User.FindFirstValue(ClaimTypes.NameIdentifier) once JWT is implemented
     private static readonly Guid PlaceholderUserId = new("00000000-0000-0000-0000-000000000001");
 
     private readonly ISightingReportService _service;
 
     public SightingReportController(ISightingReportService service) => _service = service;
-
-    [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<SightingReportDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResult<SightingReportDto>>> Search([FromQuery] SightingReportSearchRequest request)
-    {
-        var result = await _service.SearchAsync(request);
-        return Ok(result with
-        {
-            Items = result.Items.Select(WithLinks),
-            Links = PaginationLinks(result.Page, result.TotalPages, request),
-        });
-    }
 
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
@@ -36,6 +23,18 @@ public class SightingReportController : ApiControllerBase
     {
         var dto = await _service.GetByIdAsync(id);
         return Ok(WithLinks(dto));
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<SightingReportDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<SightingReportDto>>> Search([FromQuery] SightingReportSearchRequest request)
+    {
+        var result = await _service.SearchAsync(request);
+        return Ok(result with
+        {
+            Items = (IReadOnlyList<SightingReportDto>)result.Items.Select(WithLinks),
+            Links = PaginationLinks(result.Page, result.TotalPages, request),
+        });
     }
 
     [HttpPost]
@@ -96,8 +95,6 @@ public class SightingReportController : ApiControllerBase
         return NoContent();
     }
 
-    // ── HATEOAS ──────────────────────────────────────────────────────────────
-
     private SightingReportDto WithLinks(SightingReportDto dto)
     {
         var links = new List<Link>
@@ -128,9 +125,9 @@ public class SightingReportController : ApiControllerBase
     {
         var links = new List<Link>
         {
-            PageLink("self",  page,                      req),
-            PageLink("first", 1,                         req),
-            PageLink("last",  Math.Max(totalPages, 1),   req),
+            PageLink("self",  page,       req),
+            PageLink("first", 1,          req),
+            PageLink("last",  Math.Max(totalPages, 1), req),
         };
         if (page > 1)          links.Add(PageLink("prev", page - 1, req));
         if (page < totalPages) links.Add(PageLink("next", page + 1, req));
@@ -140,11 +137,11 @@ public class SightingReportController : ApiControllerBase
     private Link PageLink(string rel, int page, SightingReportSearchRequest req) =>
         MakeLink(rel, nameof(Search), "GET", new
         {
-            animalId = req.AnimalId,
-            status   = req.Status,
-            from     = req.From,
-            to       = req.To,
+            animalId  = req.AnimalId,
+            status    = req.Status,
+            from      = req.From,
+            to        = req.To,
             page,
-            pageSize = req.PageSize,
+            pageSize  = req.PageSize,
         });
 }

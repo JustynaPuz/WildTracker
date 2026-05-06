@@ -13,6 +13,15 @@ public class AnimalController : ApiControllerBase
 
     public AnimalController(IAnimalService service) => _service = service;
 
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<AnimalDto>> Get(Guid id)
+    {
+        var dto = await _service.GetByIdAsync(id);
+        return Ok(WithLinks(dto));
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<AnimalDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<CollectionResponse<AnimalDto>>> GetAll()
@@ -27,15 +36,6 @@ public class AnimalController : ApiControllerBase
                 MakeLink("create", nameof(Create), "POST"),
             ],
         });
-    }
-
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AnimalDto>> Get(Guid id)
-    {
-        var dto = await _service.GetByIdAsync(id);
-        return Ok(WithLinks(dto));
     }
 
     [HttpPost]
@@ -90,8 +90,6 @@ public class AnimalController : ApiControllerBase
         await _service.DeleteAsync(id);
         return NoContent();
     }
-
-    // ── HATEOAS ──────────────────────────────────────────────────────────────
 
     private AnimalDto WithLinks(AnimalDto dto) => dto with
     {
