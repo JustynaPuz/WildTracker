@@ -1,6 +1,6 @@
 namespace WildTracker.Contracts.DTOs;
 
-public class LocationDetailsDto
+public record LocationDetailsDto
 {
     public double Latitude { get; init; }
     public double Longitude { get; init; }

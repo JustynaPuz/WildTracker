@@ -1,24 +1,19 @@
 using WildTracker.Domain.Enums;
-using WildTracker.Domain.Queries;
 
 namespace WildTracker.Contracts.Requests;
 
-public class SightingReportSearchRequest
+/// <summary>
+/// Query parameters for the sighting report search endpoint.
+/// Mapping to the domain filter is intentionally kept in the Application layer
+/// (SightingReportService) to avoid a Contracts → Domain.Queries dependency.
+/// </summary>
+public record SightingReportSearchRequest
 {
     public Guid? AnimalId { get; init; }
+    public Guid? ReportedByUserId { get; init; }
     public ReportStatus? Status { get; init; }
     public DateTime? From { get; init; }
     public DateTime? To { get; init; }
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
-
-    public SightingReportFilter ToFilter() => new()
-    {
-        AnimalId = AnimalId,
-        Status = Status,
-        From = From,
-        To = To,
-        Page = Page,
-        PageSize = PageSize,
-    };
 }
