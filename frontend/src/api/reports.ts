@@ -3,6 +3,7 @@ import type {
   SightingReportDto,
   PagedResult,
   CreateSightingReportRequest,
+  UpdateSightingReportRequest,
   SightingReportSearchRequest,
 } from '../types/api'
 
@@ -15,6 +16,9 @@ export const reportsApi = {
 
   create: (request: CreateSightingReportRequest) =>
     client.post<SightingReportDto>('/reports', request).then((r) => r.data),
+
+  update: (id: string, request: UpdateSightingReportRequest) =>
+    client.put<SightingReportDto>(`/reports/${id}`, request).then((r) => r.data),
 
   approve: (id: string) =>
     client.post(`/reports/${id}/approve`),

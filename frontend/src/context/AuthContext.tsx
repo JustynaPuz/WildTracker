@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { authApi } from '../api/auth'
-import type { AppUserDto, LoginRequest } from '../types/api'
+import type { AppUserDto, AuthResponseDto, LoginRequest } from '../types/api'
 
 interface AuthContextValue {
   user: AppUserDto | null
   isAuthenticated: boolean
   login: (request: LoginRequest) => Promise<void>
+  setSession: (response: AuthResponseDto) => void
   logout: () => void
 }
 
@@ -24,12 +25,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   })
 
-  const login = useCallback(async (request: LoginRequest) => {
-    const response = await authApi.login(request)
+  const setSession = useCallback((response: AuthResponseDto) => {
     localStorage.setItem(TOKEN_KEY, response.token)
     localStorage.setItem(USER_KEY, JSON.stringify(response.user))
     setUser(response.user)
   }, [])
+
+  const login = useCallback(async (request: LoginRequest) => {
+    const response = await authApi.login(request)
+    setSession(response)
+  }, [setSession])
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
@@ -38,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, login, setSession, logout }}>
       {children}
     </AuthContext.Provider>
   )

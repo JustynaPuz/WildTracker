@@ -38,10 +38,9 @@ public class ObservationNoteController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ObservationNoteDto>> GetById(Guid reportId, Guid noteId)
     {
-        var notes = await _service.GetByReportIdAsync(reportId);
-        var note  = notes.FirstOrDefault(n => n.Id == noteId);
-        if (note is null) return NotFound();
-        return Ok(WithLinks(note, reportId));
+        var dto = await _service.GetByIdAsync(reportId, noteId);
+        if (dto is null) return NotFound();
+        return Ok(WithLinks(dto, reportId));
     }
 
     [HttpPost]

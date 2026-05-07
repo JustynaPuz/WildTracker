@@ -6,5 +6,4 @@ public record LocationDetailsDto
     public double Longitude { get; init; }
     public string? Region { get; init; }
     public string? ForestDistrict { get; init; }
-    public string? Description { get; init; }
 }

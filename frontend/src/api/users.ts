@@ -10,4 +10,10 @@ export const usersApi = {
 
   changeRole: (id: string, request: UpdateUserRoleRequest) =>
     client.put<AppUserDto>(`/users/${id}/role`, request).then((r) => r.data),
+
+  activate: (id: string) =>
+    client.post<AppUserDto>(`/users/${id}/activate`).then((r) => r.data),
+
+  deactivate: (id: string) =>
+    client.post<AppUserDto>(`/users/${id}/deactivate`).then((r) => r.data),
 }

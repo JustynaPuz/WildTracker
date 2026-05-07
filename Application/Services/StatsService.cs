@@ -13,27 +13,25 @@ public class StatsService : IStatsService
 
     public async Task<StatsSummaryDto> GetSummaryAsync()
     {
-        // Run all counts concurrently — independent queries
-        var animals  = _repo.CountAnimalsAsync();
-        var users    = _repo.CountUsersAsync();
-        var notes    = _repo.CountNotesAsync();
-        var pending  = _repo.CountReportsByStatusAsync(ReportStatus.Pending);
-        var verified = _repo.CountReportsByStatusAsync(ReportStatus.Verified);
-        var rejected = _repo.CountReportsByStatusAsync(ReportStatus.Rejected);
-        var resolved = _repo.CountReportsByStatusAsync(ReportStatus.Resolved);
-
-        await Task.WhenAll(animals, users, notes, pending, verified, rejected, resolved);
+        // Sequential — EF Core's scoped DbContext does not support concurrent operations
+        var totalAnimals = await _repo.CountAnimalsAsync();
+        var totalUsers   = await _repo.CountUsersAsync();
+        var totalNotes   = await _repo.CountNotesAsync();
+        var pending      = await _repo.CountReportsByStatusAsync(ReportStatus.Pending);
+        var verified     = await _repo.CountReportsByStatusAsync(ReportStatus.Verified);
+        var rejected     = await _repo.CountReportsByStatusAsync(ReportStatus.Rejected);
+        var resolved     = await _repo.CountReportsByStatusAsync(ReportStatus.Resolved);
 
         return new StatsSummaryDto
         {
-            TotalAnimals    = animals.Result,
-            TotalUsers      = users.Result,
-            TotalNotes      = notes.Result,
-            PendingReports  = pending.Result,
-            VerifiedReports = verified.Result,
-            RejectedReports = rejected.Result,
-            ResolvedReports = resolved.Result,
-            TotalReports    = pending.Result + verified.Result + rejected.Result + resolved.Result,
+            TotalAnimals    = totalAnimals,
+            TotalUsers      = totalUsers,
+            TotalNotes      = totalNotes,
+            PendingReports  = pending,
+            VerifiedReports = verified,
+            RejectedReports = rejected,
+            ResolvedReports = resolved,
+            TotalReports    = pending + verified + rejected + resolved,
         };
     }
 

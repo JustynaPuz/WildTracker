@@ -1,13 +1,13 @@
 import client from './client'
-import type { SightingsByMonthDto, SightingsBySpeciesDto, StatsSummaryDto } from '../types/api'
+import type { CollectionResponse, SightingsByMonthDto, SightingsBySpeciesDto, StatsSummaryDto } from '../types/api'
 
 export const statsApi = {
   getSummary: () =>
     client.get<StatsSummaryDto>('/stats/summary').then((r) => r.data),
 
   getBySpecies: () =>
-    client.get<SightingsBySpeciesDto[]>('/stats/by-species').then((r) => r.data),
+    client.get<CollectionResponse<SightingsBySpeciesDto>>('/stats/by-species').then((r) => r.data.items),
 
   getByMonth: (months = 12) =>
-    client.get<SightingsByMonthDto[]>('/stats/by-month', { params: { months } }).then((r) => r.data),
+    client.get<CollectionResponse<SightingsByMonthDto>>('/stats/by-month', { params: { months } }).then((r) => r.data.items),
 }

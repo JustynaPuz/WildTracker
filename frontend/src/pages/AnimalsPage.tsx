@@ -1,16 +1,10 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Fragment } from 'react'
 import { animalsApi } from '../api/animals'
+import { STATUS_COLOR } from '../constants'
 import type { AnimalDto, CreateAnimalRequest, MovementPointDto } from '../types/api'
 
 const SPECIES = ['Unknown','Wolf','Fox','Bear','Deer','Boar','Lynx','Moose','Bird','Other'] as const
 const HEALTH  = ['Unknown','Healthy','Injured','Sick','Dead'] as const
-
-const STATUS_COLOR: Record<string, string> = {
-  Pending:  '#d97706',
-  Verified: '#2d6a4f',
-  Rejected: '#c53030',
-  Resolved: '#6b7280',
-}
 
 export default function AnimalsPage() {
   const [animals, setAnimals]           = useState<AnimalDto[]>([])
@@ -20,6 +14,9 @@ export default function AnimalsPage() {
   const [form, setForm]                 = useState<CreateAnimalRequest>({
     identifier: '', name: '', species: 'Unknown', healthStatus: 'Unknown',
   })
+
+  const [editingId, setEditingId]   = useState<string | null>(null)
+  const [editForm, setEditForm]     = useState<{ name: string; species: typeof SPECIES[number]; healthStatus: typeof HEALTH[number]; description: string }>({ name: '', species: 'Unknown', healthStatus: 'Unknown', description: '' })
 
   // movement panel state
   const [movementAnimalId, setMovementAnimalId]     = useState<string | null>(null)
@@ -60,11 +57,33 @@ export default function AnimalsPage() {
     }
   }
 
+  const openEdit = (a: AnimalDto) => {
+    setEditingId(a.id)
+    setEditForm({ name: a.name, species: a.species as typeof SPECIES[number], healthStatus: a.healthStatus as typeof HEALTH[number], description: a.description ?? '' })
+    setMovementAnimalId(null)
+  }
+
+  const handleSaveEdit = async (id: string) => {
+    try {
+      await animalsApi.update(id, {
+        name:         editForm.name,
+        species:      editForm.species,
+        healthStatus: editForm.healthStatus,
+        description:  editForm.description || undefined,
+      })
+      setEditingId(null)
+      load()
+    } catch {
+      setError('Failed to update animal.')
+    }
+  }
+
   const toggleMovement = async (id: string) => {
     if (movementAnimalId === id) {
       setMovementAnimalId(null)
       return
     }
+    setEditingId(null)
     setMovementAnimalId(id)
     setMovement([])
     setMovementError(null)
@@ -142,14 +161,18 @@ export default function AnimalsPage() {
           </thead>
           <tbody>
             {animals.map(a => (
-              <>
-                <tr key={a.id} style={{ borderBottom: movementAnimalId === a.id ? 'none' : '1px solid #eee', background: movementAnimalId === a.id ? '#f0f7f0' : 'transparent' }}>
+              <Fragment key={a.id}>
+                <tr style={{ borderBottom: movementAnimalId === a.id ? 'none' : '1px solid #eee', background: movementAnimalId === a.id ? '#f0f7f0' : 'transparent' }}>
                   <td style={{ padding: '8px 12px' }}>{a.identifier}</td>
                   <td style={{ padding: '8px 12px' }}>{a.name}</td>
                   <td style={{ padding: '8px 12px' }}>{a.species}</td>
                   <td style={{ padding: '8px 12px' }}>{a.healthStatus}</td>
                   <td style={{ padding: '8px 12px' }}>{a.lastSeenAtUtc ? new Date(a.lastSeenAtUtc).toLocaleDateString() : '—'}</td>
                   <td style={{ padding: '8px 12px', display: 'flex', gap: '0.4rem' }}>
+                    <button onClick={() => editingId === a.id ? setEditingId(null) : openEdit(a)}
+                      style={{ background: editingId === a.id ? '#374151' : '#e2e8f0', color: editingId === a.id ? '#fff' : '#333', border: 'none', padding: '4px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
+                      {editingId === a.id ? 'Cancel' : 'Edit'}
+                    </button>
                     <button onClick={() => toggleMovement(a.id)}
                       style={{ background: movementAnimalId === a.id ? '#2d6a4f' : '#e2e8f0', color: movementAnimalId === a.id ? '#fff' : '#333', border: 'none', padding: '4px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
                       {movementAnimalId === a.id ? 'Hide Trail' : 'Trail'}
@@ -161,8 +184,51 @@ export default function AnimalsPage() {
                   </td>
                 </tr>
 
+                {editingId === a.id && (
+                  <tr style={{ background: '#f8fdf8' }}>
+                    <td colSpan={6} style={{ padding: '0 12px 12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', paddingTop: '0.75rem' }}>
+                        <label style={{ fontSize: '0.9rem' }}>
+                          Name *
+                          <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required
+                            style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+                        </label>
+                        <label style={{ fontSize: '0.9rem' }}>
+                          Species
+                          <select value={editForm.species} onChange={e => setEditForm(f => ({ ...f, species: e.target.value as typeof SPECIES[number] }))}
+                            style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                            {SPECIES.map(s => <option key={s}>{s}</option>)}
+                          </select>
+                        </label>
+                        <label style={{ fontSize: '0.9rem' }}>
+                          Health Status
+                          <select value={editForm.healthStatus} onChange={e => setEditForm(f => ({ ...f, healthStatus: e.target.value as typeof HEALTH[number] }))}
+                            style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                            {HEALTH.map(h => <option key={h}>{h}</option>)}
+                          </select>
+                        </label>
+                        <label style={{ fontSize: '0.9rem' }}>
+                          Description
+                          <input value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                            style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+                        </label>
+                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => handleSaveEdit(a.id)}
+                            style={{ background: '#2d6a4f', color: '#fff', border: 'none', padding: '7px 16px', cursor: 'pointer', borderRadius: '4px' }}>
+                            Save
+                          </button>
+                          <button onClick={() => setEditingId(null)}
+                            style={{ padding: '7px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', background: '#fff' }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
                 {movementAnimalId === a.id && (
-                  <tr key={`${a.id}-movement`} style={{ background: '#f0f7f0' }}>
+                  <tr style={{ background: '#f0f7f0' }}>
                     <td colSpan={6} style={{ padding: '0 12px 12px' }}>
                       <MovementPanel
                         animal={movementAnimal!}
@@ -173,7 +239,7 @@ export default function AnimalsPage() {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
             {animals.length === 0 && (
               <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No animals found.</td></tr>

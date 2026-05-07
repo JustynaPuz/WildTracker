@@ -24,17 +24,19 @@ public static class SightingReportMapper
             Longitude      = entity.Location.Coordinates.Longitude,
             Region         = entity.Location.Region,
             ForestDistrict = entity.Location.ForestDistrict,
-            Description    = entity.Location.Description,
         },
     };
 
     public static MovementPointDto ToMovementPointDto(SightingReport entity) => new()
     {
-        ReportId      = entity.Id,
-        Latitude      = entity.Location.Coordinates.Latitude,
-        Longitude     = entity.Location.Coordinates.Longitude,
-        Region        = entity.Location.Region,
-        ObservedAtUtc = entity.ObservedAtUtc,
+        ReportId       = entity.Id,
+        ObservedAtUtc  = entity.ObservedAtUtc,
+        Latitude       = entity.Location.Coordinates.Latitude,
+        Longitude      = entity.Location.Coordinates.Longitude,
+        Region         = entity.Location.Region,
+        ForestDistrict = entity.Location.ForestDistrict,
+        ReportType     = entity.ReportType,
+        Status         = entity.Status,
     };
 
     public static SightingReport ToEntity(CreateSightingReportRequest request, Guid reportedByUserId) => new(
@@ -46,9 +48,7 @@ public static class SightingReportMapper
         new LocationDetails(
             new Coordinates(request.Latitude, request.Longitude),
             request.Region,
-            request.ForestDistrict
-            // location has no separate free-text description in the request
-        ),
+            request.ForestDistrict),
         request.Description
     );
 }

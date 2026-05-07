@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, Fragment } from 'react'
 import { reportsApi } from '../api/reports'
 import { animalsApi } from '../api/animals'
 import { notesApi } from '../api/notes'
+import { STATUS_COLOR } from '../constants'
 import type {
   SightingReportDto,
   AnimalDto,
   ObservationNoteDto,
   CreateSightingReportRequest,
+  UpdateSightingReportRequest,
   ReportStatus,
   ReportType,
   SightingSource,
@@ -15,13 +17,6 @@ import type {
 const REPORT_TYPES: ReportType[] = ['Sighting', 'Injury', 'Death', 'DangerousBehavior', 'Other']
 const SOURCES: SightingSource[] = ['Manual', 'CameraTrap', 'Drone', 'Sensor', 'Imported']
 const STATUSES: ReportStatus[] = ['Pending', 'Verified', 'Rejected', 'Resolved']
-
-const statusColor: Record<ReportStatus, string> = {
-  Pending:  '#b7791f',
-  Verified: '#276749',
-  Rejected: '#c53030',
-  Resolved: '#2b6cb0',
-}
 
 const btn = (bg: string): React.CSSProperties => ({
   background: bg, color: '#fff', border: 'none',
@@ -61,6 +56,11 @@ export default function ReportsPage() {
 
   // per-note edit state: noteId → draft content (undefined = not editing)
   const [editingNote, setEditingNote] = useState<Record<string, string>>({})
+
+  // report edit state
+  const [editingReportId, setEditingReportId] = useState<string | null>(null)
+  const [editReportForm, setEditReportForm]   = useState<Partial<CreateSightingReportRequest>>({})
+
 
   useEffect(() => { animalsApi.getAll().then(setAnimals).catch(() => {}) }, [])
 
@@ -118,6 +118,38 @@ export default function ReportsPage() {
     catch { setError('Failed to delete.') }
   }
 
+  const openEditReport = (r: SightingReportDto) => {
+    setEditingReportId(r.id)
+    setEditReportForm({
+      observedAtUtc:  new Date(r.observedAtUtc).toISOString().slice(0, 16),
+      reportType:     r.reportType,
+      source:         r.source,
+      latitude:       r.location.latitude,
+      longitude:      r.location.longitude,
+      region:         r.location.region ?? '',
+      forestDistrict: r.location.forestDistrict ?? '',
+      description:    r.description ?? '',
+    })
+    setExpandedId(null)
+  }
+
+  const handleSaveReport = async (id: string) => {
+    try {
+      await reportsApi.update(id, {
+        observedAtUtc:  new Date(editReportForm.observedAtUtc!).toISOString(),
+        reportType:     editReportForm.reportType!,
+        source:         editReportForm.source!,
+        latitude:       Number(editReportForm.latitude),
+        longitude:      Number(editReportForm.longitude),
+        region:         editReportForm.region         || undefined,
+        forestDistrict: editReportForm.forestDistrict || undefined,
+        description:    editReportForm.description    || undefined,
+      } as UpdateSightingReportRequest)
+      setEditingReportId(null)
+      loadReports()
+    } catch { setError('Failed to update report.') }
+  }
+
   // ── note actions ──────────────────────────────────────────────────────────
 
   const reloadNotes = async (reportId: string) => {
@@ -127,6 +159,7 @@ export default function ReportsPage() {
 
   const toggleNotes = async (id: string) => {
     if (expandedId === id) { setExpandedId(null); return }
+    setEditingReportId(null)
     setExpandedId(id)
     if (!notes[id]) await reloadNotes(id)
   }
@@ -279,8 +312,8 @@ export default function ReportsPage() {
             </thead>
             <tbody>
               {reports.map((r) => (
-                <>
-                  <tr key={r.id} style={{ borderBottom: expandedId === r.id ? 'none' : '1px solid #eee' }}>
+                <Fragment key={r.id}>
+                  <tr style={{ borderBottom: expandedId === r.id ? 'none' : '1px solid #eee' }}>
                     <td style={{ padding: '8px 12px' }}>{animalName(r.animalId)}</td>
                     <td style={{ padding: '8px 12px' }}>{r.reportType}</td>
                     <td style={{ padding: '8px 12px' }}>{r.source}</td>
@@ -290,26 +323,101 @@ export default function ReportsPage() {
                     </td>
                     <td style={{ padding: '8px 12px' }}>{new Date(r.observedAtUtc).toLocaleDateString()}</td>
                     <td style={{ padding: '8px 12px' }}>
-                      <span style={{ color: statusColor[r.status], fontWeight: 600 }}>{r.status}</span>
+                      <span style={{ color: STATUS_COLOR[r.status], fontWeight: 600 }}>{r.status}</span>
                     </td>
                     <td style={{ padding: '8px 12px' }}>
                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                         {r.status === 'Pending' && (
                           <>
-                            <button onClick={() => handleApprove(r.id)} style={btn('#276749')}>Approve</button>
+                            <button onClick={() => handleApprove(r.id)} style={btn('#2d6a4f')}>Approve</button>
                             <button onClick={() => handleReject(r.id)}  style={btn('#c53030')}>Reject</button>
                           </>
                         )}
                         {r.status === 'Verified' && (
-                          <button onClick={() => handleResolve(r.id)} style={btn('#6b46c1')}>Resolve</button>
+                          <button onClick={() => handleResolve(r.id)} style={btn('#6b7280')}>Resolve</button>
                         )}
-                        <button onClick={() => toggleNotes(r.id)} style={btn('#2b6cb0')}>
+                        <button onClick={() => editingReportId === r.id ? setEditingReportId(null) : openEditReport(r)}
+                          style={btn(editingReportId === r.id ? '#374151' : '#374151')}>
+                          {editingReportId === r.id ? 'Cancel' : 'Edit'}
+                        </button>
+                        <button onClick={() => toggleNotes(r.id)} style={btn('#374151')}>
                           {expandedId === r.id ? 'Hide Notes' : 'Notes'}
                         </button>
-                        <button onClick={() => handleDeleteReport(r.id)} style={btn('#718096')}>Delete</button>
+                        <button onClick={() => handleDeleteReport(r.id)} style={btn('#c53030')}>Delete</button>
                       </div>
                     </td>
                   </tr>
+
+                  {editingReportId === r.id && (
+                    <tr>
+                      <td colSpan={7} style={{ padding: '0 12px 12px', background: '#f8fdf8', borderBottom: '1px solid #eee' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', paddingTop: '0.75rem' }}>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Observed At
+                            <input type="datetime-local" value={editReportForm.observedAtUtc ?? ''}
+                              onChange={e => setEditReportForm(f => ({ ...f, observedAtUtc: e.target.value }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                          </label>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Report Type
+                            <select value={editReportForm.reportType ?? 'Sighting'}
+                              onChange={e => setEditReportForm(f => ({ ...f, reportType: e.target.value as ReportType }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                              {REPORT_TYPES.map(t => <option key={t}>{t}</option>)}
+                            </select>
+                          </label>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Source
+                            <select value={editReportForm.source ?? 'Manual'}
+                              onChange={e => setEditReportForm(f => ({ ...f, source: e.target.value as SightingSource }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                              {SOURCES.map(s => <option key={s}>{s}</option>)}
+                            </select>
+                          </label>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Latitude
+                            <input type="number" step="any" value={editReportForm.latitude ?? 0}
+                              onChange={e => setEditReportForm(f => ({ ...f, latitude: parseFloat(e.target.value) || 0 }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                          </label>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Longitude
+                            <input type="number" step="any" value={editReportForm.longitude ?? 0}
+                              onChange={e => setEditReportForm(f => ({ ...f, longitude: parseFloat(e.target.value) || 0 }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                          </label>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Region
+                            <input value={editReportForm.region ?? ''}
+                              onChange={e => setEditReportForm(f => ({ ...f, region: e.target.value }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                          </label>
+                          <label style={{ fontSize: '0.9rem' }}>
+                            Forest District
+                            <input value={editReportForm.forestDistrict ?? ''}
+                              onChange={e => setEditReportForm(f => ({ ...f, forestDistrict: e.target.value }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                          </label>
+                          <label style={{ fontSize: '0.9rem', gridColumn: '2 / -1' }}>
+                            Description
+                            <input value={editReportForm.description ?? ''}
+                              onChange={e => setEditReportForm(f => ({ ...f, description: e.target.value }))}
+                              style={{ display: 'block', width: '100%', padding: '6px', marginTop: '2px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                          </label>
+                          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={() => handleSaveReport(r.id)}
+                              style={{ background: '#2d6a4f', color: '#fff', border: 'none', padding: '7px 16px', cursor: 'pointer', borderRadius: '4px' }}>
+                              Save
+                            </button>
+                            <button onClick={() => setEditingReportId(null)}
+                              style={{ padding: '7px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', background: '#fff' }}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
 
                   {expandedId === r.id && (
                     <tr key={`${r.id}-notes`}>
@@ -329,7 +437,7 @@ export default function ReportsPage() {
                                         style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
                                       />
                                       <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                                        <button onClick={() => handleSaveNote(r.id, n.id)} style={btn('#276749')}>Save</button>
+                                        <button onClick={() => handleSaveNote(r.id, n.id)} style={btn('#2d6a4f')}>Save</button>
                                         <button onClick={() => handleCancelEdit(n.id)}
                                           style={{ border: '1px solid #ccc', background: '#fff', padding: '3px 8px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.8rem' }}>
                                           Cancel
@@ -346,7 +454,7 @@ export default function ReportsPage() {
                                           {n.updatedAtUtc && <span> · edited {new Date(n.updatedAtUtc).toLocaleString()}</span>}
                                         </small>
                                         <div style={{ display: 'flex', gap: '4px' }}>
-                                          <button onClick={() => handleEditNote(n.id, n.content)} style={btn('#b7791f')}>Edit</button>
+                                          <button onClick={() => handleEditNote(n.id, n.content)} style={btn('#374151')}>Edit</button>
                                           <button onClick={() => handleDeleteNote(r.id, n.id)}    style={btn('#c53030')}>Delete</button>
                                         </div>
                                       </div>
@@ -373,7 +481,7 @@ export default function ReportsPage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
               {reports.length === 0 && (
                 <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No reports found.</td></tr>

@@ -129,6 +129,17 @@ export interface UpdateAnimalRequest {
   description?: string
 }
 
+export interface UpdateSightingReportRequest {
+  observedAtUtc: string
+  reportType: ReportType
+  source: SightingSource
+  latitude: number
+  longitude: number
+  region?: string
+  forestDistrict?: string
+  description?: string
+}
+
 export interface CreateSightingReportRequest {
   animalId: string
   observedAtUtc: string

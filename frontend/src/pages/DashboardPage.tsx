@@ -3,14 +3,8 @@ import { Link } from 'react-router-dom'
 import { statsApi } from '../api/stats'
 import { reportsApi } from '../api/reports'
 import { animalsApi } from '../api/animals'
-import type { AnimalDto, ReportStatus, SightingReportDto, StatsSummaryDto } from '../types/api'
-
-const STATUS_COLOR: Record<ReportStatus, string> = {
-  Pending:  '#d97706',
-  Verified: '#2d6a4f',
-  Rejected: '#c53030',
-  Resolved: '#6b7280',
-}
+import { STATUS_COLOR } from '../constants'
+import type { AnimalDto, SightingReportDto, StatsSummaryDto } from '../types/api'
 
 export default function DashboardPage() {
   const [summary, setSummary]     = useState<StatsSummaryDto | null>(null)

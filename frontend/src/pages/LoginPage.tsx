@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
@@ -16,7 +16,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login({ email, password })
-      navigate('/animals', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch {
       setError('Invalid email or password.')
     } finally {
@@ -68,7 +68,12 @@ export default function LoginPage() {
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
 
-        <p style={{ color: '#888', fontSize: '0.8rem', textAlign: 'center', marginBottom: 0, marginTop: '1.5rem' }}>
+        <p style={{ textAlign: 'center', marginTop: '1.25rem', marginBottom: 0, fontSize: '0.9rem', color: '#555' }}>
+          No account?{' '}
+          <Link to="/register" style={{ color: '#2d6a4f' }}>Create one</Link>
+        </p>
+
+        <p style={{ color: '#888', fontSize: '0.8rem', textAlign: 'center', marginBottom: 0, marginTop: '0.75rem' }}>
           Demo: ranger@wildtracker.pl / Ranger123!
         </p>
       </form>

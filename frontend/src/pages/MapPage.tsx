@@ -3,14 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import { reportsApi } from '../api/reports'
 import { animalsApi } from '../api/animals'
+import { STATUS_COLOR } from '../constants'
 import type { AnimalDto, ReportStatus, SightingReportDto } from '../types/api'
-
-const STATUS_COLOR: Record<ReportStatus, string> = {
-  Pending:  '#d97706',
-  Verified: '#2d6a4f',
-  Rejected: '#c53030',
-  Resolved: '#6b7280',
-}
 
 const STATUS_FILL: Record<ReportStatus, string> = {
   Pending:  '#fbbf24',
@@ -21,9 +15,8 @@ const STATUS_FILL: Record<ReportStatus, string> = {
 
 const STATUSES: ReportStatus[] = ['Pending', 'Verified', 'Rejected', 'Resolved']
 
-// Poland center
-const DEFAULT_CENTER: [number, number] = [52.0, 19.0]
-const DEFAULT_ZOOM = 6
+const DEFAULT_CENTER: [number, number] = [20, 0]
+const DEFAULT_ZOOM = 2
 
 export default function MapPage() {
   const [reports, setReports]         = useState<SightingReportDto[]>([])

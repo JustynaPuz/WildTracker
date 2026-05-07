@@ -4,6 +4,7 @@ using WildTracker.Application.Mappers;
 using WildTracker.Contracts.Common;
 using WildTracker.Contracts.DTOs;
 using WildTracker.Contracts.Requests;
+using WildTracker.Domain.Entities;
 using WildTracker.Domain.Queries;
 using WildTracker.Domain.Repositories;
 using WildTracker.Domain.ValueObjects;
@@ -66,41 +67,14 @@ public class SightingReportService : ISightingReportService
         return SightingReportMapper.ToDto(entity);
     }
 
-    public async Task<SightingReportDto> ApproveAsync(Guid id)
-    {
-        var entity = await _reportRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
+    public Task<SightingReportDto> ApproveAsync(Guid id) =>
+        TransitionStatusAsync(id, r => r.Approve());
 
-        try { entity.Approve(); }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+    public Task<SightingReportDto> RejectAsync(Guid id) =>
+        TransitionStatusAsync(id, r => r.Reject());
 
-        await _reportRepository.UpdateAsync(entity);
-        return SightingReportMapper.ToDto(entity);
-    }
-
-    public async Task<SightingReportDto> RejectAsync(Guid id)
-    {
-        var entity = await _reportRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
-
-        try { entity.Reject(); }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
-
-        await _reportRepository.UpdateAsync(entity);
-        return SightingReportMapper.ToDto(entity);
-    }
-
-    public async Task<SightingReportDto> ResolveAsync(Guid id)
-    {
-        var entity = await _reportRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
-
-        try { entity.Resolve(); }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
-
-        await _reportRepository.UpdateAsync(entity);
-        return SightingReportMapper.ToDto(entity);
-    }
+    public Task<SightingReportDto> ResolveAsync(Guid id) =>
+        TransitionStatusAsync(id, r => r.Resolve());
 
     public async Task DeleteAsync(Guid id)
     {
@@ -108,5 +82,17 @@ public class SightingReportService : ISightingReportService
             ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
 
         await _reportRepository.DeleteAsync(entity);
+    }
+
+    private async Task<SightingReportDto> TransitionStatusAsync(Guid id, Action<SightingReport> transition)
+    {
+        var entity = await _reportRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Sighting report with id '{id}' was not found.");
+
+        try { transition(entity); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+
+        await _reportRepository.UpdateAsync(entity);
+        return SightingReportMapper.ToDto(entity);
     }
 }

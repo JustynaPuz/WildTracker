@@ -27,6 +27,13 @@ public class ObservationNoteService : IObservationNoteService
         return notes.Select(ObservationNoteMapper.ToDto).ToList();
     }
 
+    public async Task<ObservationNoteDto?> GetByIdAsync(Guid reportId, Guid noteId)
+    {
+        var note = await _noteRepository.GetByIdAsync(noteId);
+        if (note is null || note.SightingReportId != reportId) return null;
+        return ObservationNoteMapper.ToDto(note);
+    }
+
     public async Task<ObservationNoteDto> CreateAsync(Guid reportId, string content, Guid authorUserId)
     {
         _ = await _reportRepository.GetByIdAsync(reportId)

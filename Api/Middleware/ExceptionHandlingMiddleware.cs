@@ -48,7 +48,6 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-
     private static Task WriteProblemAsync(HttpContext context, int status, string detail)
     {
         var problem = new ProblemDetails
