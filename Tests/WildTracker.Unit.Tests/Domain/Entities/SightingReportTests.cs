@@ -11,8 +11,6 @@ public class SightingReportTests
 {
     private const int MaxDescriptionLength = 2000;
 
-    // --- Constructor ---
-
     [Test]
     public void Constructor_WithValidData_SetsStatusToPending()
     {
@@ -55,8 +53,6 @@ public class SightingReportTests
         Assert.That(ex!.Message, Does.Contain($"Value cannot exceed {MaxDescriptionLength} characters."));
     }
 
-    // --- Approve ---
-
     [Test]
     public void Approve_WhenPending_SetsStatusToVerified()
     {
@@ -78,8 +74,6 @@ public class SightingReportTests
 
         Assert.That(ex!.Message, Does.Contain("Cannot approve a report"));
     }
-
-    // --- Reject ---
 
     [Test]
     public void Reject_WhenPending_SetsStatusToRejected()
@@ -103,8 +97,6 @@ public class SightingReportTests
         Assert.That(ex!.Message, Does.Contain("Cannot reject a report"));
     }
 
-    // --- Resolve ---
-
     [Test]
     public void Resolve_WhenVerified_SetsStatusToResolved()
     {
@@ -126,8 +118,6 @@ public class SightingReportTests
 
         Assert.That(ex!.Message, Does.Contain("Cannot resolve a report"));
     }
-
-    // --- UpdateObservation ---
 
     [Test]
     public void UpdateObservation_WithValidData_UpdatesProperties()
@@ -156,8 +146,6 @@ public class SightingReportTests
         Assert.Throws<ArgumentNullException>(() =>
             report.UpdateObservation(DateTime.UtcNow, null!, null, ReportType.Sighting, SightingSource.Manual));
     }
-
-    // --- Helpers ---
 
     private static SightingReport InState(ReportStatus status)
     {

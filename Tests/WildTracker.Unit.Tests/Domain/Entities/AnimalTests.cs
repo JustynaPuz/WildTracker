@@ -25,8 +25,6 @@ public class AnimalTests
         new TestCaseData(new string('a', MaxNameLength + 1), $"Value cannot exceed {MaxNameLength} characters."),
     ];
 
-    // --- Constructor ---
-
     [Test]
     public void Constructor_WithValidData_SetsProperties()
     {
@@ -76,8 +74,6 @@ public class AnimalTests
         Assert.That(ex!.Message, Does.Contain($"Value cannot exceed {MaxDescriptionLength} characters."));
     }
 
-    // --- UpdateDetails ---
-
     [Test]
     public void UpdateDetails_WithValidData_UpdatesProperties()
     {
@@ -116,8 +112,6 @@ public class AnimalTests
 
         Assert.That(ex!.Message, Does.Contain($"Value cannot exceed {MaxDescriptionLength} characters."));
     }
-
-    // --- MarkSeen ---
 
     [Test]
     public void MarkSeen_SetsLastSeenAtUtc()

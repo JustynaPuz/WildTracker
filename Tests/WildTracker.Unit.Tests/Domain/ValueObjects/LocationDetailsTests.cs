@@ -12,8 +12,6 @@ public class LocationDetailsTests
 
     private static readonly Coordinates ValidCoordinates = new(52.0, 19.0);
 
-    // --- Constructor ---
-
     [Test]
     public void Constructor_WithValidData_SetsProperties()
     {
@@ -73,8 +71,6 @@ public class LocationDetailsTests
 
         Assert.That(ex!.Message, Does.Contain($"Value cannot exceed {MaxDescriptionLength} characters."));
     }
-
-    // --- Equals ---
 
     [Test]
     public void Equals_WithSameValues_ReturnsTrue()

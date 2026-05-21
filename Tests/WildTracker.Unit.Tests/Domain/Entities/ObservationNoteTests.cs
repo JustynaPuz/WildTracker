@@ -15,8 +15,6 @@ public class ObservationNoteTests
         new TestCaseData(new string('a', MaxContentLength + 1), $"Value cannot exceed {MaxContentLength} characters."),
     ];
 
-    // --- Constructor ---
-
     [Test]
     public void Constructor_WithValidData_SetsProperties()
     {
@@ -65,8 +63,6 @@ public class ObservationNoteTests
 
         Assert.That(ex!.Message, Does.Contain(expectedMessage));
     }
-
-    // --- UpdateContent ---
 
     [Test]
     public void UpdateContent_WithValidContent_UpdatesContent()

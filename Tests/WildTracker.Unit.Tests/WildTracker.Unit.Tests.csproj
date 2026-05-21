@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="../../Domain/WildTracker.Domain.csproj" />
     <ProjectReference Include="../../Application/WildTracker.Application.csproj" />
+    <ProjectReference Include="../../Infrastructure/WildTracker.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -18,8 +18,6 @@ public class CoordinatesTests
         new TestCaseData(180.1,  "Longitude must be between -180 and 180."),
     ];
 
-    // --- Constructor ---
-
     [Test]
     public void Constructor_WithValidData_SetsProperties()
     {
@@ -56,8 +54,6 @@ public class CoordinatesTests
 
         Assert.That(ex!.Message, Does.Contain(expectedMessage));
     }
-
-    // --- Equals ---
 
     [Test]
     public void Equals_WithSameValues_ReturnsTrue()

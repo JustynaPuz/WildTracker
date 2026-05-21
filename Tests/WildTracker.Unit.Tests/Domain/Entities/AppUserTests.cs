@@ -24,8 +24,6 @@ public class AppUserTests
         new TestCaseData(new string('j', MaxEmailLength + 1), "Email cannot exceed 200 characters."),
     ];
 
-    // --- Constructor ---
-
     [Test]
     public void Constructor_WithValidData_SetsDefaults()
     {
@@ -84,8 +82,6 @@ public class AppUserTests
         Assert.That(user.Email, Is.EqualTo("jan@example.com"));
     }
 
-    // --- UpdateProfile ---
-
     [Test]
     public void UpdateProfile_WithValidData_UpdatesProperties()
     {
@@ -134,8 +130,6 @@ public class AppUserTests
         Assert.That(ex!.Message, Does.Contain("Email cannot be empty."));
     }
 
-    // --- ChangeRole ---
-
     [Test]
     public void ChangeRole_SetsNewRole()
     {
@@ -145,8 +139,6 @@ public class AppUserTests
 
         Assert.That(user.Role, Is.EqualTo(UserRole.Admin));
     }
-
-    // --- Activate / Deactivate ---
 
     [Test]
     public void Deactivate_SetsIsActiveToFalse()
