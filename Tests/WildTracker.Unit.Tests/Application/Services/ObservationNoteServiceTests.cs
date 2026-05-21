@@ -24,7 +24,7 @@ public class ObservationNoteServiceTests
     }
 
     [Test]
-    public async Task GetByReportIdAsync_WhenReportNotFound_ThrowsNotFoundException()
+    public void GetByReportIdAsync_WhenReportNotFound_ThrowsNotFoundException()
     {
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((SightingReport?)null);
 
@@ -82,7 +82,7 @@ public class ObservationNoteServiceTests
     }
 
     [Test]
-    public async Task CreateAsync_WhenReportNotFound_ThrowsNotFoundException()
+    public void CreateAsync_WhenReportNotFound_ThrowsNotFoundException()
     {
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((SightingReport?)null);
 
@@ -110,7 +110,7 @@ public class ObservationNoteServiceTests
     }
 
     [Test]
-    public async Task UpdateAsync_WhenNoteNotFound_ThrowsNotFoundException()
+    public void UpdateAsync_WhenNoteNotFound_ThrowsNotFoundException()
     {
         _noteRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((ObservationNote?)null);
 
@@ -120,7 +120,7 @@ public class ObservationNoteServiceTests
     }
 
     [Test]
-    public async Task UpdateAsync_WhenNoteBelongsToDifferentReport_ThrowsNotFoundException()
+    public void UpdateAsync_WhenNoteBelongsToDifferentReport_ThrowsNotFoundException()
     {
         var note = new ObservationNoteBuilder().Build();
         _noteRepo.GetByIdAsync(Arg.Any<Guid>()).Returns(note);
@@ -144,7 +144,7 @@ public class ObservationNoteServiceTests
     }
 
     [Test]
-    public async Task DeleteAsync_WhenNoteNotFound_ThrowsNotFoundException()
+    public void DeleteAsync_WhenNoteNotFound_ThrowsNotFoundException()
     {
         _noteRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((ObservationNote?)null);
 
@@ -154,7 +154,7 @@ public class ObservationNoteServiceTests
     }
 
     [Test]
-    public async Task DeleteAsync_WhenNoteBelongsToDifferentReport_ThrowsNotFoundException()
+    public void DeleteAsync_WhenNoteBelongsToDifferentReport_ThrowsNotFoundException()
     {
         var note = new ObservationNoteBuilder().Build();
         _noteRepo.GetByIdAsync(Arg.Any<Guid>()).Returns(note);

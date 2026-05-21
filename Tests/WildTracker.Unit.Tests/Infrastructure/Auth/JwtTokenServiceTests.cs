@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using WildTracker.Infrastructure.Auth;
@@ -66,6 +67,8 @@ public class JwtTokenServiceTests
             Assert.That(jwt.Subject, Is.EqualTo(user.Id.ToString()));
             Assert.That(jwt.Claims.First(c => c.Type == JwtRegisteredClaimNames.Email).Value,
                 Is.EqualTo(user.Email));
+            Assert.That(jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value,
+                Is.EqualTo(user.Role.ToString()));
             Assert.That(jwt.Issuer,   Is.EqualTo(_settings.Issuer));
         });
     }

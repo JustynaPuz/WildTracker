@@ -89,23 +89,25 @@ public class StatsServiceTests
         });
     }
 
-    [Test]
-    public async Task GetByMonthAsync_ClampsMonthsBelowOne_ToOne()
+    [TestCase(0,    1)]
+    [TestCase(-5,   1)]
+    public async Task GetByMonthAsync_ClampsMonthsBelowOne_ToOne(int input, int expected)
     {
         _repo.GetReportsByMonthAsync(Arg.Any<int>()).Returns(new List<(int, int, int)>());
 
-        await _service.GetByMonthAsync(0);
+        await _service.GetByMonthAsync(input);
 
-        await _repo.Received(1).GetReportsByMonthAsync(1);
+        await _repo.Received(1).GetReportsByMonthAsync(expected);
     }
 
-    [Test]
-    public async Task GetByMonthAsync_ClampsMonthsAbove36_To36()
+    [TestCase(37,  36)]
+    [TestCase(999, 36)]
+    public async Task GetByMonthAsync_ClampsMonthsAbove36_To36(int input, int expected)
     {
         _repo.GetReportsByMonthAsync(Arg.Any<int>()).Returns(new List<(int, int, int)>());
 
-        await _service.GetByMonthAsync(37);
+        await _service.GetByMonthAsync(input);
 
-        await _repo.Received(1).GetReportsByMonthAsync(36);
+        await _repo.Received(1).GetReportsByMonthAsync(expected);
     }
 }

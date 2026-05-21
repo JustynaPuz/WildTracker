@@ -28,7 +28,7 @@ public class AnimalServiceTests
     }
 
     [Test]
-    public async Task GetByIdAsync_WhenAnimalNotFound_ThrowsNotFoundException()
+    public void GetByIdAsync_WhenAnimalNotFound_ThrowsNotFoundException()
     {
         _animalRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((Animal?)null);
 
@@ -63,7 +63,17 @@ public class AnimalServiceTests
     }
 
     [Test]
-    public async Task GetMovementAsync_WhenAnimalNotFound_ThrowsNotFoundException()
+    public async Task GetAllAsync_WhenNoAnimalsExist_ReturnsEmptyList()
+    {
+        _animalRepo.GetAllAsync().Returns(new List<Animal>());
+
+        var result = await _service.GetAllAsync();
+
+        Assert.That(result, Is.Empty);
+    }
+
+    [Test]
+    public void GetMovementAsync_WhenAnimalNotFound_ThrowsNotFoundException()
     {
         _animalRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((Animal?)null);
 
@@ -122,7 +132,7 @@ public class AnimalServiceTests
     }
 
     [Test]
-    public async Task UpdateAsync_WhenAnimalNotFound_ThrowsNotFoundException()
+    public void UpdateAsync_WhenAnimalNotFound_ThrowsNotFoundException()
     {
         _animalRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((Animal?)null);
 
@@ -155,7 +165,7 @@ public class AnimalServiceTests
     }
 
     [Test]
-    public async Task DeleteAsync_WhenAnimalNotFound_ThrowsNotFoundException()
+    public void DeleteAsync_WhenAnimalNotFound_ThrowsNotFoundException()
     {
         _animalRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((Animal?)null);
 

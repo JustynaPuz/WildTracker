@@ -28,7 +28,7 @@ public class AuthServiceTests
     }
 
     [Test]
-    public async Task LoginAsync_WhenUserNotFound_ThrowsUnauthorizedException()
+    public void LoginAsync_WhenUserNotFound_ThrowsUnauthorizedException()
     {
         _userRepo.GetByEmailAsync(Arg.Any<string>()).Returns((AppUser?)null);
 
@@ -38,7 +38,7 @@ public class AuthServiceTests
     }
 
     [Test]
-    public async Task LoginAsync_WhenUserIsDeactivated_ThrowsUnauthorizedException()
+    public void LoginAsync_WhenUserIsDeactivated_ThrowsUnauthorizedException()
     {
         var user = new AppUserBuilder().Build();
         user.Deactivate();
@@ -50,7 +50,7 @@ public class AuthServiceTests
     }
 
     [Test]
-    public async Task LoginAsync_WhenPasswordIsInvalid_ThrowsUnauthorizedException()
+    public void LoginAsync_WhenPasswordIsInvalid_ThrowsUnauthorizedException()
     {
         var user = new AppUserBuilder().Build();
         _userRepo.GetByEmailAsync(Arg.Any<string>()).Returns(user);
@@ -81,7 +81,7 @@ public class AuthServiceTests
     }
 
     [Test]
-    public async Task RegisterAsync_WhenEmailAlreadyExists_ThrowsConflictException()
+    public void RegisterAsync_WhenEmailAlreadyExists_ThrowsConflictException()
     {
         _userRepo.GetByEmailAsync(Arg.Any<string>()).Returns(new AppUserBuilder().Build());
 

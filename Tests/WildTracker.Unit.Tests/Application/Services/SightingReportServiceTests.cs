@@ -25,7 +25,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task GetByIdAsync_WhenReportNotFound_ThrowsNotFoundException()
+    public void GetByIdAsync_WhenReportNotFound_ThrowsNotFoundException()
     {
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((SightingReport?)null);
 
@@ -88,7 +88,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task UpdateAsync_WhenReportNotFound_ThrowsNotFoundException()
+    public void UpdateAsync_WhenReportNotFound_ThrowsNotFoundException()
     {
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((SightingReport?)null);
 
@@ -133,7 +133,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task ApproveAsync_WhenReportNotFound_ThrowsNotFoundException()
+    public void ApproveAsync_WhenReportNotFound_ThrowsNotFoundException()
     {
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((SightingReport?)null);
 
@@ -155,7 +155,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task ApproveAsync_WhenReportIsNotPending_ThrowsConflictException()
+    public void ApproveAsync_WhenReportIsNotPending_ThrowsConflictException()
     {
         var report = new SightingReportBuilder().Build();
         report.Reject();
@@ -179,7 +179,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task RejectAsync_WhenReportIsNotPending_ThrowsConflictException()
+    public void RejectAsync_WhenReportIsNotPending_ThrowsConflictException()
     {
         var report = new SightingReportBuilder().Build();
         report.Approve();
@@ -204,7 +204,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task ResolveAsync_WhenReportIsNotVerified_ThrowsConflictException()
+    public void ResolveAsync_WhenReportIsNotVerified_ThrowsConflictException()
     {
         var report = new SightingReportBuilder().Build();
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns(report);
@@ -215,7 +215,7 @@ public class SightingReportServiceTests
     }
 
     [Test]
-    public async Task DeleteAsync_WhenReportNotFound_ThrowsNotFoundException()
+    public void DeleteAsync_WhenReportNotFound_ThrowsNotFoundException()
     {
         _reportRepo.GetByIdAsync(Arg.Any<Guid>()).Returns((SightingReport?)null);
 

@@ -25,7 +25,6 @@ public class BcryptPasswordHasherTests
     [Test]
     public void Hash_TwoCallsWithSamePassword_ReturnDifferentHashes()
     {
-
         var hash1 = _hasher.Hash("password123");
         var hash2 = _hasher.Hash("password123");
 

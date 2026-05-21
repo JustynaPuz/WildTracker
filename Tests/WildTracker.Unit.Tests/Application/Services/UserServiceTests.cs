@@ -36,7 +36,17 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetByIdAsync_WhenUserNotFound_ThrowsNotFoundException()
+    public async Task GetAllAsync_WhenNoUsersExist_ReturnsEmptyList()
+    {
+        _repo.GetAllAsync().Returns(new List<AppUser>());
+
+        var result = await _service.GetAllAsync();
+
+        Assert.That(result, Is.Empty);
+    }
+
+    [Test]
+    public void GetByIdAsync_WhenUserNotFound_ThrowsNotFoundException()
     {
         _repo.GetByIdAsync(Arg.Any<Guid>()).Returns((AppUser?)null);
 
@@ -58,7 +68,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task ChangeRoleAsync_WhenUserNotFound_ThrowsNotFoundException()
+    public void ChangeRoleAsync_WhenUserNotFound_ThrowsNotFoundException()
     {
         _repo.GetByIdAsync(Arg.Any<Guid>()).Returns((AppUser?)null);
 
@@ -80,7 +90,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task ActivateAsync_WhenUserNotFound_ThrowsNotFoundException()
+    public void ActivateAsync_WhenUserNotFound_ThrowsNotFoundException()
     {
         _repo.GetByIdAsync(Arg.Any<Guid>()).Returns((AppUser?)null);
 
@@ -103,7 +113,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task DeactivateAsync_WhenUserNotFound_ThrowsNotFoundException()
+    public void DeactivateAsync_WhenUserNotFound_ThrowsNotFoundException()
     {
         _repo.GetByIdAsync(Arg.Any<Guid>()).Returns((AppUser?)null);
 

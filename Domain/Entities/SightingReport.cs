@@ -23,32 +23,25 @@ public class SightingReport : AuditableEntity
         Location = null!;
     }
 
-    public SightingReport(
-        Guid animalId,
-        Guid reportedByUserId,
-        DateTime observedAtUtc,
-        ReportType reportType,
-        SightingSource source,
-        LocationDetails location,
-        string? description = null)
+    public SightingReport(Guid animalId, Guid reportedByUserId, DateTime observedAtUtc, ReportType reportType, SightingSource source, LocationDetails location, string? description = null)
     {
-        AnimalId         = DomainGuard.RequiredGuid(animalId, nameof(animalId));
+        AnimalId = DomainGuard.RequiredGuid(animalId, nameof(animalId));
         ReportedByUserId = DomainGuard.RequiredGuid(reportedByUserId, nameof(reportedByUserId));
-        ObservedAtUtc    = observedAtUtc;
-        ReportType       = reportType;
-        Source           = source;
-        Location         = location ?? throw new ArgumentNullException(nameof(location));
-        Description      = DomainGuard.OptionalString(description, nameof(description), 2000);
-        Status           = ReportStatus.Pending;
+        ObservedAtUtc = observedAtUtc;
+        ReportType = reportType;
+        Source = source;
+        Location = location ?? throw new ArgumentNullException(nameof(location));
+        Description = DomainGuard.OptionalString(description, nameof(description), 2000);
+        Status = ReportStatus.Pending;
     }
 
     public void UpdateObservation(DateTime observedAtUtc, LocationDetails location, string? description, ReportType reportType, SightingSource source)
     {
         ObservedAtUtc = observedAtUtc;
-        Location      = location ?? throw new ArgumentNullException(nameof(location));
-        Description   = DomainGuard.OptionalString(description, nameof(description), 2000);
-        ReportType    = reportType;
-        Source        = source;
+        Location = location ?? throw new ArgumentNullException(nameof(location));
+        Description = DomainGuard.OptionalString(description, nameof(description), 2000);
+        ReportType = reportType;
+        Source = source;
         MarkAsUpdated();
     }
 
