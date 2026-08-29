@@ -8,7 +8,7 @@ using WildTracker.Contracts.Requests;
 namespace WildTracker.API.Controllers;
 
 [Route("api/users")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class UsersController : ApiControllerBase
 {
     private readonly IUserService _service;

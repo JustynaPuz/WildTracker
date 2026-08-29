@@ -54,6 +54,7 @@ public class AnimalController : ApiControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AnimalDto>> Create(CreateAnimalRequest request)
@@ -63,6 +64,7 @@ public class AnimalController : ApiControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(AnimalDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -98,6 +100,7 @@ public class AnimalController : ApiControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)

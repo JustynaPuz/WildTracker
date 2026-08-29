@@ -38,6 +38,7 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<SightingReportDto>> Create(CreateSightingReportRequest request)
@@ -47,6 +48,7 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -57,6 +59,7 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpPost("{id:guid}/approve")]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -67,6 +70,7 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpPost("{id:guid}/reject")]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -77,6 +81,7 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpPost("{id:guid}/resolve")]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(SightingReportDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -87,6 +92,7 @@ public class SightingReportController : ApiControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)

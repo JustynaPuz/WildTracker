@@ -14,22 +14,23 @@ public static class DataSeeder
         // ── Users ─────────────────────────────────────────────────────────────
 
         var admin      = User("Admin",    "WildTracker",  "admin@wildtracker.pl",           "Admin123!",   UserRole.Admin);
+        var viewerPL   = User("Viewer",   "WildTracker",  "viewer@wildtracker.pl",           "Viewer123!",  UserRole.Viewer);
         var rangerPL   = User("Jan",      "Kowalski",     "ranger@wildtracker.pl",           "Ranger123!",  UserRole.Ranger);
-        var resrchPL   = User("Anna",     "Nowak",        "researcher@wildtracker.pl",       "Research123!", UserRole.Researcher);
+        var resrchPL   = User("Anna",     "Nowak",        "researcher@wildtracker.pl",       "Research123!", UserRole.Ranger);
         var rangerUS   = User("James",    "Harlow",       "j.harlow@yellowstone.gov",        "Ranger123!",  UserRole.Ranger);
-        var resrchCA   = User("Sophie",   "Tremblay",     "stremblay@wildlife.ca",           "Research123!", UserRole.Researcher);
+        var resrchCA   = User("Sophie",   "Tremblay",     "stremblay@wildlife.ca",           "Research123!", UserRole.Ranger);
         var rangerNO   = User("Erik",     "Bjørnstad",    "e.bjornstad@miljo.no",            "Ranger123!",  UserRole.Ranger);
-        var resrchRU   = User("Mikhail",  "Volkov",       "m.volkov@wwf.ru",                 "Research123!", UserRole.Researcher);
+        var resrchRU   = User("Mikhail",  "Volkov",       "m.volkov@wwf.ru",                 "Research123!", UserRole.Ranger);
         var rangerKE   = User("Amara",    "Oduya",        "a.oduya@kws.go.ke",               "Ranger123!",  UserRole.Ranger);
-        var resrchIN   = User("Priya",    "Sharma",       "p.sharma@wii.gov.in",             "Research123!", UserRole.Researcher);
+        var resrchIN   = User("Priya",    "Sharma",       "p.sharma@wii.gov.in",             "Research123!", UserRole.Ranger);
         var rangerDE   = User("Lukas",    "Bauer",        "l.bauer@bfn.de",                  "Ranger123!",  UserRole.Ranger);
-        var resrchBR   = User("Carlos",   "Mendes",       "c.mendes@icmbio.gov.br",          "Research123!", UserRole.Researcher);
+        var resrchBR   = User("Carlos",   "Mendes",       "c.mendes@icmbio.gov.br",          "Research123!", UserRole.Ranger);
         var rangerAU   = User("Fiona",    "McAllister",   "f.mcallister@parks.vic.gov.au",   "Ranger123!",  UserRole.Ranger);
-        var resrchES   = User("María",    "García",       "m.garcia@csic.es",                "Research123!", UserRole.Researcher);
+        var resrchES   = User("María",    "García",       "m.garcia@csic.es",                "Research123!", UserRole.Ranger);
         var rangerZA   = User("Sipho",    "Dlamini",      "s.dlamini@sanparks.org",          "Ranger123!",  UserRole.Ranger);
-        var resrchJP   = User("Kenji",    "Tanaka",       "k.tanaka@env.go.jp",              "Research123!", UserRole.Researcher);
+        var resrchJP   = User("Kenji",    "Tanaka",       "k.tanaka@env.go.jp",              "Research123!", UserRole.Ranger);
 
-        context.Users.AddRange(admin, rangerPL, resrchPL, rangerUS, resrchCA, rangerNO, resrchRU,
+        context.Users.AddRange(admin, viewerPL, rangerPL, resrchPL, rangerUS, resrchCA, rangerNO, resrchRU,
             rangerKE, resrchIN, rangerDE, resrchBR, rangerAU, resrchES, rangerZA, resrchJP);
 
         // ── Animals ───────────────────────────────────────────────────────────

@@ -44,6 +44,7 @@ public class ObservationNoteController : ApiControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(ObservationNoteDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -54,6 +55,7 @@ public class ObservationNoteController : ApiControllerBase
     }
 
     [HttpPut("{noteId:guid}")]
+    [Authorize(Roles = "Ranger,Admin")]
     [ProducesResponseType(typeof(ObservationNoteDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -65,6 +67,7 @@ public class ObservationNoteController : ApiControllerBase
     }
 
     [HttpDelete("{noteId:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid reportId, Guid noteId)
