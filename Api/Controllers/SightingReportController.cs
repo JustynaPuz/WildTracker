@@ -142,6 +142,7 @@ public class SightingReportController : ApiControllerBase
         MakeLink(rel, nameof(Search), "GET", new
         {
             animalId         = req.AnimalId,
+            animalSearchTerm = req.AnimalSearchTerm,
             species          = req.Species,
             reportedByUserId = req.ReportedByUserId,
             status           = req.Status,

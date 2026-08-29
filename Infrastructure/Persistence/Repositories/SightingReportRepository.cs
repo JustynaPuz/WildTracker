@@ -24,6 +24,13 @@ public class SightingReportRepository : ISightingReportRepository
         if (filter.AnimalId.HasValue)
             query = query.Where(x => x.AnimalId == filter.AnimalId);
 
+        if (!string.IsNullOrWhiteSpace(filter.AnimalSearchTerm))
+        {
+            var term = filter.AnimalSearchTerm.ToLower();
+            query = query.Where(x => _context.Animals.Any(a =>
+                a.Id == x.AnimalId && (a.Name.ToLower().Contains(term) || a.Identifier.ToLower().Contains(term))));
+        }
+
         if (filter.ReportedByUserId.HasValue)
             query = query.Where(x => x.ReportedByUserId == filter.ReportedByUserId);
 

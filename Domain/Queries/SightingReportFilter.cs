@@ -5,6 +5,7 @@ namespace WildTracker.Domain.Queries;
 public class SightingReportFilter
 {
     public Guid? AnimalId { get; init; }
+    public string? AnimalSearchTerm { get; init; }
     public Species? Species { get; init; }
     public Guid? ReportedByUserId { get; init; }
     public ReportStatus? Status { get; init; }

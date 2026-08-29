@@ -6,6 +6,7 @@ namespace WildTracker.Contracts.Requests;
 public record SightingReportSearchRequest
 {
     public Guid? AnimalId { get; init; }
+    public string? AnimalSearchTerm { get; init; }
     public Species? Species { get; init; }
     public Guid? ReportedByUserId { get; init; }
     public ReportStatus? Status { get; init; }
@@ -17,6 +18,7 @@ public record SightingReportSearchRequest
     public SightingReportFilter ToFilter() => new()
     {
         AnimalId         = AnimalId,
+        AnimalSearchTerm = AnimalSearchTerm,
         Species          = Species,
         ReportedByUserId = ReportedByUserId,
         Status           = Status,
