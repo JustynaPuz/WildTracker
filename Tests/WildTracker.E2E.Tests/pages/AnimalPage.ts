@@ -1,4 +1,5 @@
 import {Locator, Page} from '@playwright/test'
+import { NavBar } from '../components/NavBar';
 
 export type AnimalEditFields = {
     name?: string;
@@ -9,6 +10,7 @@ export type AnimalEditFields = {
 
 export class AnimalPage {
     readonly page: Page;
+    readonly nav: NavBar
     readonly selectSpecies: Locator;
     readonly selectHealthStatus: Locator;
     readonly searchInput: Locator;
@@ -22,14 +24,16 @@ export class AnimalPage {
     readonly addDescription: Locator;
     readonly saveAnimalButton: Locator;
     readonly cancelAnimalButton: Locator;
-    readonly animalList: Locator;
+    readonly animalTable: Locator;
     readonly editName: Locator;
     readonly editSpecies: Locator;
     readonly editHealth: Locator;
     readonly editDescription: Locator;
+    
 
     constructor(page: Page) {
         this.page = page;
+        this.nav = new NavBar(page);
         this.selectSpecies = page.getByLabel('Species');
         this.selectHealthStatus = page.getByLabel('Health');
         this.searchInput = page.getByLabel('Search');
@@ -43,11 +47,12 @@ export class AnimalPage {
         this.addDescription = page.locator('form').getByLabel('Description');
         this.saveAnimalButton = page.getByRole('button', {name: "Save"});
         this.cancelAnimalButton = page.getByRole('button', {name: "Cancel"});
-        this.animalList = page.getByRole('table');
-        this.editName = this.animalList.getByLabel("Name *");
-        this.editSpecies = this.animalList.getByLabel("Species");
-        this.editHealth = this.animalList.getByLabel("Health Status");
-        this.editDescription = this.animalList.getByLabel("Description");
+        this.animalTable = page.getByRole('table');
+        this.editName = this.animalTable.getByLabel("Name *");
+        this.editSpecies = this.animalTable.getByLabel("Species");
+        this.editHealth = this.animalTable.getByLabel("Health Status");
+        this.editDescription = this.animalTable.getByLabel("Description");
+        
 
     }
 
@@ -88,7 +93,7 @@ export class AnimalPage {
             await this.editDescription.fill(fields.description);
         }
 
-        await this.animalList.getByRole('button', {name: "Save"}).click();
+        await this.animalTable.getByRole('button', {name: "Save"}).click();
     }
 
     public async getAnimalRow(id: string): Promise<Locator> {

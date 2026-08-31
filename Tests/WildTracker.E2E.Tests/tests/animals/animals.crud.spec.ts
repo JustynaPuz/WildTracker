@@ -9,7 +9,7 @@ test.describe('Animals CRUD', () => {
         await animalPage.goTo();
         await animalPage.addAnimal(id, "name", "Wolf", "Healthy", "desc");
         await animalPage.searchInput.fill(id);
-        await expect(animalPage.animalList).toContainText(id);
+        await expect(animalPage.animalTable).toContainText(id);
 
         await animalPage.deleteAnimal(id);
     });
@@ -20,11 +20,11 @@ test.describe('Animals CRUD', () => {
         await animalPage.goTo();
         await animalPage.addAnimal(id, "name", "Wolf", "Healthy", "desc");
         await animalPage.searchInput.fill(id);
-        await expect(animalPage.animalList).toContainText(id);
+        await expect(animalPage.animalTable).toContainText(id);
 
         await animalPage.deleteAnimal(id);
         await animalPage.searchInput.fill(id);
-        await expect(animalPage.animalList).not.toContainText(id);
+        await expect(animalPage.animalTable).not.toContainText(id);
     });
 
     test('Edit animal', async ({ animalPage }) => {

@@ -1,7 +1,9 @@
 import { expect, Locator, Page } from "@playwright/test";
+import { NavBar } from "../components/NavBar";
 
 export class LoginPage {
     readonly page: Page;
+    readonly nav: NavBar;
     readonly emailInput: Locator;
     readonly passwordInput: Locator;
     readonly signInButton: Locator;
@@ -10,6 +12,7 @@ export class LoginPage {
     
     constructor(page: Page){
         this.page = page;
+        this.nav = new NavBar(page);
         this.emailInput = page.getByLabel("Email");
         this.passwordInput = page.getByLabel("Password");
         this.signInButton = page.getByRole('button', {name:"Sign in"});
